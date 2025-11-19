@@ -1,0 +1,21 @@
+# Google Apps Script (déployé séparément)
+Code.gs
+
+# Documentation et guides (optionnels)
+IMPORT-GUIDE.md
+IMPORT-WEB-GUIDE.md
+CONFIGURATION.md
+TROUBLESHOOTING-IMPORT.md
+GPT-INSTRUCTIONS.md
+GPT-INSTRUCTIONS-COURTES.txt
+GPT-REFERENCE-SECTIONS.txt
+format-reference.txt
+
+# Exemples (optionnels)
+exemple-*.csv
+exemples-*.csv
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
