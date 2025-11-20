@@ -869,6 +869,39 @@
             font-weight: bold;
         }
 
+        .step-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .step-back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .step-back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .step-back-btn {
+                font-size: 0.85em;
+                padding: 8px 12px;
+            }
+        }
+
         .step-close-btn {
             background: rgba(255,255,255,0.2);
             color: white;
@@ -1735,7 +1768,12 @@
     <div class="step-by-step-mode" id="stepByStepMode">
         <div class="step-header">
             <div class="step-header-title" id="stepHeaderTitle">Mode Étape par Étape</div>
-            <button class="step-close-btn" onclick="closeStepByStep()">×</button>
+            <div class="step-header-actions">
+                <button class="step-back-btn" onclick="backToRecipe()">
+                    ← Retour à la recette
+                </button>
+                <button class="step-close-btn" onclick="closeStepByStep()">×</button>
+            </div>
         </div>
         
         <div class="step-progress">
@@ -2548,6 +2586,19 @@ console.log('Première recette:', allRecipes[0]);
             } else {
                 // Dernière étape : fermer le mode
                 closeStepByStep();
+            }
+        }
+
+        function backToRecipe() {
+            // Sauvegarder la recette avant de fermer
+            const recipe = currentRecipeForStepMode;
+            
+            // Fermer le mode étape par étape
+            closeStepByStep();
+            
+            // Rouvrir la modal de la recette
+            if (recipe) {
+                openRecipeModal(recipe);
             }
         }
 
