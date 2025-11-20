@@ -1430,6 +1430,95 @@
             background: #e0e0e0;
             color: #667eea;
         }
+
+        /* Ajustement individuel d'ingrédients */
+        .ingredient-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            transition: background 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+
+        .ingredient-line:hover {
+            background: #f8f9ff;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .ingredient-text {
+            flex: 1;
+        }
+
+        .ingredient-controls {
+            display: none;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .ingredient-line:hover .ingredient-controls {
+            display: flex;
+        }
+
+        .ingredient-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #667eea;
+            border-radius: 50%;
+            background: white;
+            color: #667eea;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .ingredient-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .ingredient-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ingredient-modified {
+            background: linear-gradient(135deg, #fffbf0 0%, #fff 100%);
+            border-left: 3px solid #f59e0b;
+            padding-left: 8px !important;
+        }
+
+        .ingredient-modified-badge {
+            background: #f59e0b;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .ingredient-reset {
+            font-size: 12px;
+            padding: 2px 8px;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            color: #92400e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ingredient-reset:hover {
+            background: #fde68a;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -2440,6 +2529,8 @@ console.log('Première recette:', allRecipes[0]);
             ingredients: []
         };
 
+        let individualAdjustments = {}; // Stocke les ajustements individuels par ligne
+
         function extractPortionNumber(portionStr) {
             if (!portionStr) return null;
             const match = portionStr.match(/(\d+)/);
@@ -2473,6 +2564,10 @@ console.log('Première recette:', allRecipes[0]);
                     el.innerHTML = content;
                 }
             });
+
+            // Réinitialiser les ajustements individuels et recréer les lignes interactives
+            individualAdjustments = {};
+            setTimeout(() => makeIngredientsInteractive(), 50);
         }
 
         function updateIngredients(newPortions) {
@@ -2485,6 +2580,10 @@ console.log('Première recette:', allRecipes[0]);
                 const adjustedContent = adjustQuantitiesInText(content, ratio);
                 el.innerHTML = adjustedContent;
             });
+
+            // Réinitialiser les ajustements individuels et recréer les lignes interactives
+            individualAdjustments = {};
+            setTimeout(() => makeIngredientsInteractive(), 50);
         }
 
         function adjustQuantitiesInText(text, ratio) {
@@ -2541,6 +2640,7 @@ console.log('Première recette:', allRecipes[0]);
 
             originalPortionData.portions = portions;
             originalPortionData.ingredients = [];
+            individualAdjustments = {}; // Réinitialiser les ajustements individuels
 
             // Stocker les ingrédients sectionnés
             if (recipe.ingredientsSections && recipe.ingredientsSections.length > 0) {
@@ -2557,6 +2657,137 @@ console.log('Première recette:', allRecipes[0]);
                     content: recipe.ingredients
                 });
             }
+
+            // Rendre les ingrédients interactifs après un court délai
+            setTimeout(() => makeIngredientsInteractive(), 100);
+        }
+
+        function makeIngredientsInteractive() {
+            originalPortionData.ingredients.forEach(({ id }) => {
+                const element = document.getElementById(id);
+                if (!element) return;
+
+                // Diviser le contenu en lignes
+                const lines = element.innerHTML.split('<br>').filter(line => line.trim());
+                
+                let newHTML = lines.map((line, index) => {
+                    const lineId = `${id}-line-${index}`;
+                    const hasQuantity = /\d+(?:[.,]\d+)?/.test(line); // Vérifie si la ligne contient un nombre
+                    
+                    if (hasQuantity) {
+                        return `
+                            <div class="ingredient-line" id="${lineId}">
+                                <span class="ingredient-text">${line}</span>
+                                <div class="ingredient-controls">
+                                    <button class="ingredient-btn" onclick="adjustIndividualIngredient('${lineId}', -0.1)" title="Réduire">−</button>
+                                    <button class="ingredient-btn" onclick="adjustIndividualIngredient('${lineId}', 0.1)" title="Augmenter">+</button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        return `<div class="ingredient-line"><span class="ingredient-text">${line}</span></div>`;
+                    }
+                }).join('');
+
+                element.innerHTML = newHTML;
+            });
+        }
+
+        function adjustIndividualIngredient(lineId, delta) {
+            const lineElement = document.getElementById(lineId);
+            if (!lineElement) return;
+
+            // Initialiser l'ajustement si pas déjà fait
+            if (!individualAdjustments[lineId]) {
+                const textSpan = lineElement.querySelector('.ingredient-text');
+                individualAdjustments[lineId] = {
+                    originalContent: textSpan.innerHTML,
+                    adjustment: 1.0 // Facteur multiplicateur
+                };
+            }
+
+            // Appliquer le delta
+            individualAdjustments[lineId].adjustment += delta;
+            
+            // Minimum 0.1 (10%)
+            if (individualAdjustments[lineId].adjustment < 0.1) {
+                individualAdjustments[lineId].adjustment = 0.1;
+            }
+
+            // Maximum 5x
+            if (individualAdjustments[lineId].adjustment > 5) {
+                individualAdjustments[lineId].adjustment = 5;
+            }
+
+            // Appliquer l'ajustement
+            updateIndividualIngredientLine(lineId);
+        }
+
+        function updateIndividualIngredientLine(lineId) {
+            const lineElement = document.getElementById(lineId);
+            if (!lineElement || !individualAdjustments[lineId]) return;
+
+            const textSpan = lineElement.querySelector('.ingredient-text');
+            const originalContent = individualAdjustments[lineId].originalContent;
+            const adjustment = individualAdjustments[lineId].adjustment;
+
+            // Ajuster les quantités
+            const adjustedContent = adjustQuantitiesInText(originalContent, adjustment);
+            textSpan.innerHTML = adjustedContent;
+
+            // Ajouter un indicateur visuel si modifié
+            if (Math.abs(adjustment - 1.0) > 0.01) {
+                lineElement.classList.add('ingredient-modified');
+                
+                // Ajouter un badge et bouton reset si pas déjà présent
+                if (!lineElement.querySelector('.ingredient-modified-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'ingredient-modified-badge';
+                    badge.textContent = `×${adjustment.toFixed(1)}`;
+                    
+                    const resetBtn = document.createElement('button');
+                    resetBtn.className = 'ingredient-reset';
+                    resetBtn.textContent = '↻';
+                    resetBtn.title = 'Réinitialiser';
+                    resetBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        resetIndividualIngredient(lineId);
+                    };
+
+                    const controls = lineElement.querySelector('.ingredient-controls');
+                    controls.insertBefore(badge, controls.firstChild);
+                    controls.appendChild(resetBtn);
+                }
+                
+                // Mettre à jour le badge
+                const badge = lineElement.querySelector('.ingredient-modified-badge');
+                if (badge) badge.textContent = `×${adjustment.toFixed(1)}`;
+            } else {
+                lineElement.classList.remove('ingredient-modified');
+                const badge = lineElement.querySelector('.ingredient-modified-badge');
+                const resetBtn = lineElement.querySelector('.ingredient-reset');
+                if (badge) badge.remove();
+                if (resetBtn) resetBtn.remove();
+            }
+        }
+
+        function resetIndividualIngredient(lineId) {
+            if (!individualAdjustments[lineId]) return;
+
+            const lineElement = document.getElementById(lineId);
+            if (!lineElement) return;
+
+            const textSpan = lineElement.querySelector('.ingredient-text');
+            textSpan.innerHTML = individualAdjustments[lineId].originalContent;
+
+            lineElement.classList.remove('ingredient-modified');
+            
+            const badge = lineElement.querySelector('.ingredient-modified-badge');
+            const resetBtn = lineElement.querySelector('.ingredient-reset');
+            if (badge) badge.remove();
+            if (resetBtn) resetBtn.remove();
+
+            delete individualAdjustments[lineId];
         }
     </script>
 </body>

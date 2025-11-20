@@ -172,6 +172,7 @@ Supprimez simplement la feuille correspondante dans votre spreadsheet.
 - ✅ Configuration facile de l'URL de l'API
 - ✅ **Vue détaillée avec modal** pour chaque recette
 - ✅ **Ajustement automatique des quantités** selon le nombre de portions
+- ✅ **Ajustement individuel** de chaque ingrédient (boutons +/− au survol)
 - ✅ **Mode étape par étape** pour suivre les recettes en cuisinant
 - ✅ **Import de recettes CSV** directement depuis le site web
 - ✅ **Accès aux ingrédients** via panneau latéral en mode étape par étape
@@ -222,6 +223,25 @@ L'ajusteur détecte et ajuste intelligemment :
 - **300g** de farine
 - **0.75** sachet de levure
 - **0.75 kg** de beurre
+
+### Ajustement individuel d'ingrédients
+
+En plus de l'ajustement global, vous pouvez modifier **chaque ingrédient individuellement** :
+
+1. **Survolez un ingrédient** → des boutons **+** et **−** apparaissent
+2. **Cliquez pour ajuster** la quantité de cet ingrédient spécifique
+3. **Un badge** indique le facteur d'ajustement (ex: ×1.5 = 150% de la quantité)
+4. **Cliquez sur ↻** pour réinitialiser cet ingrédient uniquement
+
+**Cas d'usage :**
+- 🌶️ **Plus d'épices** : Doublez le piment sans toucher au reste
+- 🧂 **Moins de sel** : Réduisez à 50% pour raisons de santé
+- 🍫 **Plus de chocolat** : Parce que pourquoi pas ? 😋
+- 🥕 **Ajuster au goût** : Personnalisez selon vos préférences
+
+**Plage d'ajustement :** de 10% (×0.1) à 500% (×5.0)
+
+**Note :** L'ajustement individuel se réinitialise automatiquement quand vous changez le nombre de portions global.
 
 ## 🎯 Utiliser les sections (pour recettes complexes)
 
