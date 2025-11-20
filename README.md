@@ -171,6 +171,7 @@ Supprimez simplement la feuille correspondante dans votre spreadsheet.
 - ✅ Design moderne avec animations
 - ✅ Configuration facile de l'URL de l'API
 - ✅ **Vue détaillée avec modal** pour chaque recette
+- ✅ **Ajustement automatique des quantités** selon le nombre de portions
 - ✅ **Mode étape par étape** pour suivre les recettes en cuisinant
 - ✅ **Import de recettes CSV** directement depuis le site web
 - ✅ **Accès aux ingrédients** via panneau latéral en mode étape par étape
@@ -183,6 +184,44 @@ Supprimez simplement la feuille correspondante dans votre spreadsheet.
 - ✅ Génération de feuille Template
 - ✅ Compteur et testeur intégrés
 - ✅ **Support des sections flexibles** pour organiser recettes complexes
+
+## 🔢 Ajusteur de portions
+
+L'ajusteur de portions permet de modifier automatiquement toutes les quantités d'ingrédients selon le nombre de personnes désiré.
+
+### Comment l'utiliser
+
+1. **Cliquez sur une recette** pour ouvrir la vue détaillée
+2. **L'ajusteur apparaît automatiquement** si la recette contient un nombre de portions (ex: "4 personnes", "6 portions")
+3. **Utilisez les boutons + et −** pour augmenter ou diminuer le nombre de portions
+4. **Les quantités s'ajustent automatiquement** dans tous les ingrédients
+5. **Cliquez sur "Réinitialiser"** pour revenir aux quantités originales
+
+### Formats reconnus
+
+L'ajusteur détecte et ajuste intelligemment :
+- **Nombres entiers** : `250g` → `500g` (pour 2× portions)
+- **Nombres décimaux** : `1.5 kg` → `3 kg`
+- **Fractions** : `1/2 tasse` → `1 tasse`
+- **Unités variées** : g, kg, ml, l, cl, cuillères, sachets, pincées...
+
+### Arrondissage intelligent
+
+- **< 1** : 2 décimales (ex: `0.33 cuillère`)
+- **1-10** : 1 décimale (ex: `2.5 g`)
+- **> 10** : arrondi à l'entier (ex: `350 g`)
+
+### Exemple
+
+**Recette originale pour 4 personnes :**
+- 200g de farine
+- 1/2 sachet de levure
+- 0.5 kg de beurre
+
+**Ajusté pour 6 personnes (×1.5) :**
+- **300g** de farine
+- **0.75** sachet de levure
+- **0.75 kg** de beurre
 
 ## 🎯 Utiliser les sections (pour recettes complexes)
 

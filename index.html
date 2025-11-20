@@ -1326,6 +1326,110 @@
             border: 1px solid #bee5eb;
             display: block;
         }
+
+        /* Ajusteur de portions */
+        .portion-adjuster {
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .portion-adjuster-title {
+            font-size: 1em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .portion-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .portion-btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .portion-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .portion-btn:active {
+            transform: scale(0.95);
+        }
+
+        .portion-display {
+            flex: 1;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .portion-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .portion-label {
+            font-size: 0.95em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .portion-original {
+            font-size: 0.85em;
+            color: #999;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .ingredient-adjusted {
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .portion-reset-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            color: #666;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .portion-reset-btn:hover {
+            background: #e0e0e0;
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -1848,14 +1952,36 @@ console.log('Première recette:', allRecipes[0]);
                 ${infoItems ? `<div class="modal-recipe-info">${infoItems}</div>` : ''}
             `;
 
-            // Affichage des ingrédients
+            // Ajusteur de portions
+            const originalPortions = extractPortionNumber(recipe.portions);
+            if (originalPortions && (recipe.ingredientsSections || recipe.ingredients)) {
+                html += `
+                    <div class="portion-adjuster">
+                        <div class="portion-adjuster-title">
+                            🔢 Ajuster les quantités
+                        </div>
+                        <div class="portion-controls">
+                            <button class="portion-btn" onclick="adjustPortion(-1)">−</button>
+                            <div class="portion-display">
+                                <div class="portion-number" id="currentPortions">${originalPortions}</div>
+                                <div class="portion-label">personne(s)</div>
+                                <div class="portion-original">Original : ${recipe.portions}</div>
+                            </div>
+                            <button class="portion-btn" onclick="adjustPortion(1)">+</button>
+                        </div>
+                        <center><button class="portion-reset-btn" onclick="resetPortions()">↻ Réinitialiser</button></center>
+                    </div>
+                `;
+            }
+
+            // Affichage des ingrédients (avec IDs pour l'ajustement)
             if (recipe.ingredientsSections && recipe.ingredientsSections.length > 0) {
                 html += `<div class="modal-section"><div class="modal-section-title">📋 Ingrédients</div>`;
-                recipe.ingredientsSections.forEach(section => {
+                recipe.ingredientsSections.forEach((section, index) => {
                     html += `
                         <div class="modal-subsection">
                             <div class="modal-subsection-title">${section.title}</div>
-                            <p>${section.content}</p>
+                            <p id="ingredients-section-${index}">${section.content}</p>
                         </div>
                     `;
                 });
@@ -1864,7 +1990,7 @@ console.log('Première recette:', allRecipes[0]);
                 html += `
                     <div class="modal-section">
                         <div class="modal-section-title">📋 Ingrédients</div>
-                        <p>${recipe.ingredients}</p>
+                        <p id="ingredients-simple">${recipe.ingredients}</p>
                     </div>
                 `;
             }
@@ -1922,6 +2048,9 @@ console.log('Première recette:', allRecipes[0]);
             
             // Stocker la recette pour le mode étape par étape
             currentRecipeForStepMode = recipe;
+            
+            // Stocker les données originales pour l'ajustement de portions
+            storeOriginalPortionData(recipe);
             
             // Préparer le contenu du drawer pour mobile
             prepareIngredientsDrawer(recipe);
@@ -2302,6 +2431,131 @@ console.log('Première recette:', allRecipes[0]);
                 document.getElementById('recipesGrid').innerHTML = '<div class="no-results">Aucune recette ne correspond à votre recherche</div>';
             } else {
                 displayRecipes(filtered);
+            }
+        }
+
+        // ===== Fonctions d'ajustement de portions =====
+        let originalPortionData = {
+            portions: 0,
+            ingredients: []
+        };
+
+        function extractPortionNumber(portionStr) {
+            if (!portionStr) return null;
+            const match = portionStr.match(/(\d+)/);
+            return match ? parseInt(match[1]) : null;
+        }
+
+        function adjustPortion(delta) {
+            const currentEl = document.getElementById('currentPortions');
+            if (!currentEl) return;
+
+            let current = parseInt(currentEl.textContent);
+            let newValue = current + delta;
+
+            // Minimum 1 portion
+            if (newValue < 1) newValue = 1;
+
+            currentEl.textContent = newValue;
+            updateIngredients(newValue);
+        }
+
+        function resetPortions() {
+            const currentEl = document.getElementById('currentPortions');
+            if (!currentEl) return;
+
+            currentEl.textContent = originalPortionData.portions;
+            
+            // Restaurer les ingrédients originaux
+            originalPortionData.ingredients.forEach(({ id, content }) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = content;
+                }
+            });
+        }
+
+        function updateIngredients(newPortions) {
+            const ratio = newPortions / originalPortionData.portions;
+            
+            originalPortionData.ingredients.forEach(({ id, content }) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                
+                const adjustedContent = adjustQuantitiesInText(content, ratio);
+                el.innerHTML = adjustedContent;
+            });
+        }
+
+        function adjustQuantitiesInText(text, ratio) {
+            // Patterns pour détecter les quantités
+            const patterns = [
+                // Nombres décimaux ou entiers suivis d'unités optionnelles
+                /(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|cl|dl|c\.|cuillères?|càs|càc|tasses?|pincées?|sachets?)?/gi,
+                // Fractions (ex: 1/2, 3/4)
+                /(\d+)\/(\d+)/g
+            ];
+
+            let adjustedText = text;
+
+            // Traiter les fractions d'abord
+            adjustedText = adjustedText.replace(/(\d+)\/(\d+)/g, (match, numerator, denominator) => {
+                const originalValue = parseInt(numerator) / parseInt(denominator);
+                const newValue = originalValue * ratio;
+                return formatNumber(newValue);
+            });
+
+            // Traiter les nombres avec unités
+            adjustedText = adjustedText.replace(/(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|cl|dl|c\.|cuillères?|càs|càc|tasses?|pincées?|sachets?)?/gi, 
+                (match, number, unit) => {
+                    const originalValue = parseFloat(number.replace(',', '.'));
+                    const newValue = originalValue * ratio;
+                    const formattedNumber = formatNumber(newValue);
+                    
+                    // Mettre en évidence les quantités ajustées
+                    const highlighted = `<span class="ingredient-adjusted">${formattedNumber}</span>`;
+                    return unit ? `${highlighted} ${unit}` : highlighted;
+                }
+            );
+
+            return adjustedText;
+        }
+
+        function formatNumber(num) {
+            // Arrondir intelligemment
+            if (num < 1) {
+                // Pour les petites quantités, garder 2 décimales
+                return num.toFixed(2).replace(/\.?0+$/, '');
+            } else if (num < 10) {
+                // Pour les quantités moyennes, 1 décimale
+                return num.toFixed(1).replace(/\.?0+$/, '');
+            } else {
+                // Pour les grandes quantités, arrondir à l'entier
+                return Math.round(num).toString();
+            }
+        }
+
+        function storeOriginalPortionData(recipe) {
+            const portions = extractPortionNumber(recipe.portions);
+            if (!portions) return;
+
+            originalPortionData.portions = portions;
+            originalPortionData.ingredients = [];
+
+            // Stocker les ingrédients sectionnés
+            if (recipe.ingredientsSections && recipe.ingredientsSections.length > 0) {
+                recipe.ingredientsSections.forEach((section, index) => {
+                    originalPortionData.ingredients.push({
+                        id: `ingredients-section-${index}`,
+                        content: section.content
+                    });
+                });
+            } else if (recipe.ingredients) {
+                // Stocker les ingrédients simples
+                originalPortionData.ingredients.push({
+                    id: 'ingredients-simple',
+                    content: recipe.ingredients
+                });
             }
         }
     </script>
