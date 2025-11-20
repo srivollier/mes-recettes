@@ -1198,6 +1198,287 @@
             }
         }
 
+        /* Liste de courses */
+        .shopping-list-mode {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #f5f5f5;
+            z-index: 3000;
+            overflow-y: auto;
+        }
+
+        .shopping-list-mode.active {
+            display: block;
+        }
+
+        .shopping-header {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .shopping-header-title {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .shopping-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .shopping-view-toggle {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shopping-view-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .shopping-view-toggle.active {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .shopping-close-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shopping-close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .shopping-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .shopping-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .shopping-empty-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .shopping-empty-text {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .shopping-empty-hint {
+            color: #bbb;
+            font-size: 0.9em;
+        }
+
+        .shopping-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .shopping-section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shopping-section-count {
+            background: #FF6B6B;
+            color: white;
+            font-size: 0.7em;
+            padding: 4px 10px;
+            border-radius: 15px;
+        }
+
+        .shopping-recipe-group {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .shopping-recipe-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .shopping-recipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .shopping-recipe-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #FF6B6B;
+        }
+
+        .shopping-recipe-portions {
+            font-size: 0.9em;
+            color: #999;
+            font-style: italic;
+        }
+
+        .shopping-recipe-delete {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shopping-recipe-delete:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+
+        .shopping-ingredient {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 5px;
+        }
+
+        .shopping-ingredient:hover {
+            background: #f9f9f9;
+        }
+
+        .shopping-ingredient.checked {
+            opacity: 0.6;
+        }
+
+        .shopping-ingredient.checked .shopping-ingredient-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .shopping-ingredient-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            margin-right: 12px;
+            accent-color: #FF6B6B;
+        }
+
+        .shopping-ingredient-text {
+            flex: 1;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .shopping-category-group {
+            margin-bottom: 30px;
+        }
+
+        .shopping-category-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #FF6B6B;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FFE0E0;
+        }
+
+        .shopping-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .shopping-clear-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .shopping-clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .shopping-list-badge {
+            background: #ff4444;
+            color: white;
+            font-size: 0.7em;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .shopping-header-title {
+                font-size: 1.1em;
+            }
+
+            .shopping-view-toggle {
+                font-size: 0.75em;
+                padding: 6px 10px;
+            }
+
+            .shopping-content {
+                padding: 15px;
+            }
+
+            .shopping-section {
+                padding: 20px;
+            }
+        }
+
         /* Modal d'import CSV */
         .import-modal {
             display: none;
@@ -1656,6 +1937,16 @@
                     <span class="category-count" id="count-all">0</span>
                 </li>
             </ul>
+            
+            <div class="sidebar-title" style="margin-top: 30px;">
+                🛒 Liste de courses
+            </div>
+            <ul class="category-list">
+                <li class="category-item" onclick="openShoppingList()" style="cursor: pointer;">
+                    <span>📝 Ma liste</span>
+                    <span class="shopping-list-badge" id="shoppingListBadge" style="display: none;">0</span>
+                </li>
+            </ul>
         </aside>
 
         <!-- Contenu principal -->
@@ -1814,6 +2105,27 @@
         </div>
     </div>
 
+    <!-- Liste de courses -->
+    <div class="shopping-list-mode" id="shoppingListMode">
+        <div class="shopping-header">
+            <div class="shopping-header-title">🛒 Ma Liste de Courses</div>
+            <div class="shopping-header-actions">
+                <button class="shopping-view-toggle" id="shoppingViewToggle" onclick="toggleShoppingView()">
+                    <span id="shoppingViewText">Vue par catégories</span>
+                </button>
+                <button class="shopping-close-btn" onclick="closeShoppingList()">×</button>
+            </div>
+        </div>
+
+        <div class="shopping-content" id="shoppingContent">
+            <div class="shopping-empty">
+                <div class="shopping-empty-icon">🛒</div>
+                <div class="shopping-empty-text">Votre liste de courses est vide</div>
+                <div class="shopping-empty-hint">Ajoutez des recettes pour commencer</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allRecipes = [];
         let filteredRecipes = [];
@@ -1821,6 +2133,12 @@
         
         // ⚙️ CONFIGURATION : Remplacez cette URL par celle de votre Web App Google Apps Script
         const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxgK2cGOJ38dt5dz8sH0kpmJxIFmnlFfFnGELQbaXxldNk-PVRVM71IexafmWxb4gfZbw/exec'; // <- Remplacez par votre URL
+
+        // ===== LISTE DE COURSES =====
+        let shoppingList = {
+            recipes: []
+        };
+        let shoppingListViewMode = 'recipe'; // 'recipe' ou 'category'
         
         let webAppUrl = localStorage.getItem('webAppUrl') || DEFAULT_WEB_APP_URL;
 
@@ -2198,6 +2516,40 @@ console.log('Première recette:', allRecipes[0]);
                         </div>
                     </div>
                 `;
+            }
+
+            // Bouton Ajouter à la liste de courses
+            if (recipe.ingredientsSections || recipe.ingredients) {
+                const recipeInList = shoppingList.recipes.find(r => r.name === recipe.nom);
+                if (recipeInList) {
+                    html += `
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div style="padding: 15px; background: #e8f5e9; border-radius: 10px; color: #2e7d32; font-weight: 600;">
+                                ✓ Cette recette est déjà dans votre liste de courses
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="text-align: center; margin: 20px 0;">
+                            <button onclick="addRecipeToShoppingListFromModal()" style="
+                                background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+                                color: white;
+                                border: none;
+                                border-radius: 12px;
+                                padding: 15px 30px;
+                                font-size: 1em;
+                                font-weight: 600;
+                                cursor: pointer;
+                                box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 107, 0.4)'"
+                               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 107, 0.3)'">
+                                🛒 Ajouter à la liste de courses
+                            </button>
+                        </div>
+                    `;
+                }
             }
 
             // Affichage des ingrédients (avec IDs pour l'ajustement)
@@ -3137,6 +3489,468 @@ console.log('Première recette:', allRecipes[0]);
             const newPortions = Math.round(originalPortionData.portions * globalRatio);
             currentEl.textContent = newPortions;
         }
+
+        // ============================================
+        // FONCTIONS LISTE DE COURSES - STOCKAGE
+        // ============================================
+
+        function saveShoppingListToStorage() {
+            try {
+                localStorage.setItem('mes-recettes-shopping-list', JSON.stringify(shoppingList));
+            } catch (e) {
+                console.error('Erreur lors de la sauvegarde de la liste de courses:', e);
+            }
+        }
+
+        function loadShoppingListFromStorage() {
+            try {
+                const stored = localStorage.getItem('mes-recettes-shopping-list');
+                if (stored) {
+                    shoppingList = JSON.parse(stored);
+                    updateShoppingListBadge();
+                }
+            } catch (e) {
+                console.error('Erreur lors du chargement de la liste de courses:', e);
+                shoppingList = { recipes: [] };
+            }
+        }
+
+        function updateShoppingListBadge() {
+            const badge = document.getElementById('shoppingListBadge');
+            if (badge) {
+                const count = shoppingList.recipes.length;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        function detectIngredientCategory(ingredientText) {
+            const text = ingredientText.toLowerCase();
+            
+            // Fruits et légumes
+            if (/tomate|salade|laitue|carotte|oignon|poivron|courgette|aubergine|pomme|poire|banane|orange|citron|légume|fruit|épinard|brocoli|chou|concombre|radis|céleri/i.test(text)) {
+                return "Fruits & Légumes";
+            }
+            
+            // Viandes et poissons
+            if (/viande|poulet|bœuf|porc|agneau|veau|canard|dinde|poisson|saumon|thon|cabillaud|crevette|moule|œuf|jambon|bacon|saucisse/i.test(text)) {
+                return "Viandes & Poissons";
+            }
+            
+            // Produits laitiers
+            if (/lait|crème|beurre|fromage|yaourt|yogourt|mozzarella|parmesan|gruyère|emmental|ricotta/i.test(text)) {
+                return "Produits laitiers";
+            }
+            
+            // Épices et condiments
+            if (/sel|poivre|épice|curry|paprika|cumin|cannelle|vanille|muscade|basilic|thym|romarin|persil|coriandre|origan|laurier|moutarde|vinaigre|sauce|ketchup|mayonnaise/i.test(text)) {
+                return "Épices & Condiments";
+            }
+            
+            // Épicerie (pâtes, riz, farine, etc.)
+            if (/farine|sucre|riz|pâte|pain|céréale|quinoa|semoule|couscous|levure|huile|chocolat|cacao|confiture|miel|biscuit|pâtisserie/i.test(text)) {
+                return "Épicerie";
+            }
+            
+            // Autres
+            return "Autres";
+        }
+
+        // ============================================
+        // FONCTIONS LISTE DE COURSES - GESTION
+        // ============================================
+
+        function openShoppingList() {
+            document.getElementById('shoppingListMode').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            renderShoppingList();
+            closeSidebar();
+        }
+
+        function closeShoppingList() {
+            document.getElementById('shoppingListMode').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleShoppingView() {
+            shoppingListViewMode = shoppingListViewMode === 'recipe' ? 'category' : 'recipe';
+            const viewText = document.getElementById('shoppingViewText');
+            viewText.textContent = shoppingListViewMode === 'recipe' ? 'Vue par catégories' : 'Vue par recettes';
+            renderShoppingList();
+        }
+
+        function addRecipeToShoppingListFromModal() {
+            const recipe = currentRecipeForStepMode;
+            if (!recipe) return;
+
+            addRecipeToShoppingList(recipe);
+        }
+
+        function addRecipeToShoppingList(recipe) {
+            // Vérifier si déjà dans la liste
+            if (shoppingList.recipes.find(r => r.name === recipe.nom)) {
+                alert('Cette recette est déjà dans votre liste de courses !');
+                return;
+            }
+
+            // Extraire les ingrédients avec quantités ajustées
+            const ingredients = [];
+            let ingredientId = 0;
+
+            if (recipe.ingredientsSections && recipe.ingredientsSections.length > 0) {
+                recipe.ingredientsSections.forEach((section, sectionIndex) => {
+                    const adjustedContent = getAdjustedIngredientsContent(`ingredients-section-${sectionIndex}`);
+                    const content = adjustedContent || section.content;
+                    
+                    // Séparer par lignes et traiter chaque ingrédient
+                    const lines = content.split(/<br>|\n/).filter(line => line.trim());
+                    lines.forEach(line => {
+                        const cleanLine = line.replace(/<[^>]*>/g, '').trim();
+                        if (cleanLine && cleanLine !== '-') {
+                            ingredients.push({
+                                id: `ing-${ingredientId++}`,
+                                text: cleanLine,
+                                originalText: cleanLine,
+                                checked: false,
+                                category: detectIngredientCategory(cleanLine)
+                            });
+                        }
+                    });
+                });
+            } else if (recipe.ingredients) {
+                const adjustedContent = getAdjustedIngredientsContent('ingredients-simple');
+                const content = adjustedContent || recipe.ingredients;
+                
+                const lines = content.split(/<br>|\n/).filter(line => line.trim());
+                lines.forEach(line => {
+                    const cleanLine = line.replace(/<[^>]*>/g, '').trim();
+                    if (cleanLine && cleanLine !== '-') {
+                        ingredients.push({
+                            id: `ing-${ingredientId++}`,
+                            text: cleanLine,
+                            originalText: cleanLine,
+                            checked: false,
+                            category: detectIngredientCategory(cleanLine)
+                        });
+                    }
+                });
+            }
+
+            // Ajouter à la liste
+            const newRecipe = {
+                id: `recipe-${Date.now()}`,
+                name: recipe.nom,
+                portions: extractPortionNumber(recipe.portions) || 0,
+                adjustedPortions: Math.round((extractPortionNumber(recipe.portions) || 0) * globalRatio),
+                ingredients: ingredients
+            };
+
+            shoppingList.recipes.push(newRecipe);
+            saveShoppingListToStorage();
+            updateShoppingListBadge();
+
+            // Fermer la modal de recette et ouvrir la liste
+            closeRecipeModal();
+            openShoppingList();
+        }
+
+        function removeRecipeFromShoppingList(recipeId) {
+            if (confirm('Voulez-vous vraiment supprimer cette recette de votre liste de courses ?')) {
+                shoppingList.recipes = shoppingList.recipes.filter(r => r.id !== recipeId);
+                saveShoppingListToStorage();
+                updateShoppingListBadge();
+                renderShoppingList();
+            }
+        }
+
+        function toggleIngredientChecked(recipeId, ingredientId) {
+            const recipe = shoppingList.recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            const ingredient = recipe.ingredients.find(i => i.id === ingredientId);
+            if (!ingredient) return;
+
+            ingredient.checked = !ingredient.checked;
+            saveShoppingListToStorage();
+            renderShoppingList();
+        }
+
+        function clearShoppingList() {
+            if (confirm('Voulez-vous vraiment vider toute votre liste de courses ?')) {
+                shoppingList = { recipes: [] };
+                saveShoppingListToStorage();
+                updateShoppingListBadge();
+                renderShoppingList();
+            }
+        }
+
+        function renderShoppingList() {
+            const content = document.getElementById('shoppingContent');
+
+            if (shoppingList.recipes.length === 0) {
+                content.innerHTML = `
+                    <div class="shopping-empty">
+                        <div class="shopping-empty-icon">🛒</div>
+                        <div class="shopping-empty-text">Votre liste de courses est vide</div>
+                        <div class="shopping-empty-hint">Ajoutez des recettes pour commencer</div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (shoppingListViewMode === 'recipe') {
+                renderShoppingListByRecipe(content);
+            } else {
+                renderShoppingListByCategory(content);
+            }
+        }
+
+        function renderShoppingListByRecipe(content) {
+            // Séparer les ingrédients cochés et non cochés
+            const toBuy = [];
+            const owned = [];
+
+            shoppingList.recipes.forEach(recipe => {
+                const toBuyIngredients = recipe.ingredients.filter(i => !i.checked);
+                const ownedIngredients = recipe.ingredients.filter(i => i.checked);
+
+                if (toBuyIngredients.length > 0) {
+                    toBuy.push({ recipe, ingredients: toBuyIngredients });
+                }
+                if (ownedIngredients.length > 0) {
+                    owned.push({ recipe, ingredients: ownedIngredients });
+                }
+            });
+
+            let html = '';
+
+            // Section "À acheter"
+            if (toBuy.length > 0) {
+                const totalIngredients = toBuy.reduce((sum, item) => sum + item.ingredients.length, 0);
+                html += `
+                    <div class="shopping-section">
+                        <div class="shopping-section-title">
+                            🛒 À acheter
+                            <span class="shopping-section-count">${totalIngredients}</span>
+                        </div>
+                `;
+
+                toBuy.forEach(({ recipe, ingredients }) => {
+                    html += `
+                        <div class="shopping-recipe-group">
+                            <div class="shopping-recipe-header">
+                                <div>
+                                    <div class="shopping-recipe-name">${recipe.name}</div>
+                                    <div class="shopping-recipe-portions">${recipe.adjustedPortions || recipe.portions} personne(s)</div>
+                                </div>
+                                <button class="shopping-recipe-delete" onclick="removeRecipeFromShoppingList('${recipe.id}')">
+                                    🗑️ Supprimer
+                                </button>
+                            </div>
+                    `;
+
+                    ingredients.forEach(ingredient => {
+                        html += `
+                            <div class="shopping-ingredient">
+                                <input type="checkbox" class="shopping-ingredient-checkbox" 
+                                       onchange="toggleIngredientChecked('${recipe.id}', '${ingredient.id}')">
+                                <span class="shopping-ingredient-text">${ingredient.text}</span>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            }
+
+            // Section "Déjà en possession"
+            if (owned.length > 0) {
+                const totalIngredients = owned.reduce((sum, item) => sum + item.ingredients.length, 0);
+                html += `
+                    <div class="shopping-section">
+                        <div class="shopping-section-title">
+                            ✓ Déjà en possession
+                            <span class="shopping-section-count">${totalIngredients}</span>
+                        </div>
+                `;
+
+                owned.forEach(({ recipe, ingredients }) => {
+                    html += `
+                        <div class="shopping-recipe-group">
+                            <div class="shopping-recipe-header">
+                                <div>
+                                    <div class="shopping-recipe-name">${recipe.name}</div>
+                                </div>
+                            </div>
+                    `;
+
+                    ingredients.forEach(ingredient => {
+                        html += `
+                            <div class="shopping-ingredient checked">
+                                <input type="checkbox" class="shopping-ingredient-checkbox" checked
+                                       onchange="toggleIngredientChecked('${recipe.id}', '${ingredient.id}')">
+                                <span class="shopping-ingredient-text">${ingredient.text}</span>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            }
+
+            // Bouton vider la liste
+            html += `
+                <div class="shopping-actions">
+                    <button class="shopping-clear-btn" onclick="clearShoppingList()">
+                        🗑️ Vider la liste
+                    </button>
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        function renderShoppingListByCategory(content) {
+            // Regrouper tous les ingrédients par catégorie
+            const ingredientsByCategory = {};
+            const categoriesOrder = [
+                "Fruits & Légumes",
+                "Viandes & Poissons",
+                "Produits laitiers",
+                "Épicerie",
+                "Épices & Condiments",
+                "Autres"
+            ];
+
+            shoppingList.recipes.forEach(recipe => {
+                recipe.ingredients.forEach(ingredient => {
+                    const category = ingredient.category;
+                    if (!ingredientsByCategory[category]) {
+                        ingredientsByCategory[category] = { toBuy: [], owned: [] };
+                    }
+
+                    const item = {
+                        ...ingredient,
+                        recipeName: recipe.name,
+                        recipeId: recipe.id
+                    };
+
+                    if (ingredient.checked) {
+                        ingredientsByCategory[category].owned.push(item);
+                    } else {
+                        ingredientsByCategory[category].toBuy.push(item);
+                    }
+                });
+            });
+
+            let html = '';
+
+            // Section "À acheter" par catégories
+            const toBuyCategories = categoriesOrder.filter(cat => 
+                ingredientsByCategory[cat] && ingredientsByCategory[cat].toBuy.length > 0
+            );
+
+            if (toBuyCategories.length > 0) {
+                const totalToBuy = toBuyCategories.reduce((sum, cat) => 
+                    sum + ingredientsByCategory[cat].toBuy.length, 0
+                );
+
+                html += `
+                    <div class="shopping-section">
+                        <div class="shopping-section-title">
+                            🛒 À acheter
+                            <span class="shopping-section-count">${totalToBuy}</span>
+                        </div>
+                `;
+
+                toBuyCategories.forEach(category => {
+                    const items = ingredientsByCategory[category].toBuy;
+                    html += `
+                        <div class="shopping-category-group">
+                            <div class="shopping-category-name">${category}</div>
+                    `;
+
+                    items.forEach(ingredient => {
+                        html += `
+                            <div class="shopping-ingredient">
+                                <input type="checkbox" class="shopping-ingredient-checkbox" 
+                                       onchange="toggleIngredientChecked('${ingredient.recipeId}', '${ingredient.id}')">
+                                <span class="shopping-ingredient-text">
+                                    ${ingredient.text}
+                                    <span style="color: #999; font-size: 0.85em; font-style: italic;"> (${ingredient.recipeName})</span>
+                                </span>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            }
+
+            // Section "Déjà en possession" par catégories
+            const ownedCategories = categoriesOrder.filter(cat => 
+                ingredientsByCategory[cat] && ingredientsByCategory[cat].owned.length > 0
+            );
+
+            if (ownedCategories.length > 0) {
+                const totalOwned = ownedCategories.reduce((sum, cat) => 
+                    sum + ingredientsByCategory[cat].owned.length, 0
+                );
+
+                html += `
+                    <div class="shopping-section">
+                        <div class="shopping-section-title">
+                            ✓ Déjà en possession
+                            <span class="shopping-section-count">${totalOwned}</span>
+                        </div>
+                `;
+
+                ownedCategories.forEach(category => {
+                    const items = ingredientsByCategory[category].owned;
+                    html += `
+                        <div class="shopping-category-group">
+                            <div class="shopping-category-name">${category}</div>
+                    `;
+
+                    items.forEach(ingredient => {
+                        html += `
+                            <div class="shopping-ingredient checked">
+                                <input type="checkbox" class="shopping-ingredient-checkbox" checked
+                                       onchange="toggleIngredientChecked('${ingredient.recipeId}', '${ingredient.id}')">
+                                <span class="shopping-ingredient-text">
+                                    ${ingredient.text}
+                                    <span style="color: #999; font-size: 0.85em; font-style: italic;"> (${ingredient.recipeName})</span>
+                                </span>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            }
+
+            // Bouton vider la liste
+            html += `
+                <div class="shopping-actions">
+                    <button class="shopping-clear-btn" onclick="clearShoppingList()">
+                        🗑️ Vider la liste
+                    </button>
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        // Charger la liste au démarrage
+        loadShoppingListFromStorage();
     </script>
 </body>
 </html>
