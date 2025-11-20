@@ -171,8 +171,8 @@ Supprimez simplement la feuille correspondante dans votre spreadsheet.
 - ✅ Design moderne avec animations
 - ✅ Configuration facile de l'URL de l'API
 - ✅ **Vue détaillée avec modal** pour chaque recette
-- ✅ **Ajustement automatique des quantités** selon le nombre de portions
-- ✅ **Ajustement individuel** de chaque ingrédient (boutons +/− au survol)
+- ✅ **Ajustement proportionnel intelligent** : éditez une quantité, tout s'ajuste automatiquement
+- ✅ **Mise à jour automatique des portions** selon les quantités modifiées
 - ✅ **Mode étape par étape** pour suivre les recettes en cuisinant
 - ✅ **Import de recettes CSV** directement depuis le site web
 - ✅ **Accès aux ingrédients** via panneau latéral en mode étape par étape
@@ -193,7 +193,7 @@ L'ajusteur de portions permet de modifier automatiquement toutes les quantités 
 ### Comment l'utiliser
 
 1. **Cliquez sur une recette** pour ouvrir la vue détaillée
-2. **L'ajusteur apparaît automatiquement** si la recette contient un nombre de portions (ex: "4 personnes", "6 portions")
+2. **Cliquez sur "🔢 Ajuster les quantités"** pour déplier le module (masqué par défaut pour économiser l'espace)
 3. **Utilisez les boutons + et −** pour augmenter ou diminuer le nombre de portions
 4. **Les quantités s'ajustent automatiquement** dans tous les ingrédients
 5. **Cliquez sur "Réinitialiser"** pour revenir aux quantités originales
@@ -203,8 +203,11 @@ L'ajusteur de portions permet de modifier automatiquement toutes les quantités 
 L'ajusteur détecte et ajuste intelligemment :
 - **Nombres entiers** : `250g` → `500g` (pour 2× portions)
 - **Nombres décimaux** : `1.5 kg` → `3 kg`
-- **Fractions** : `1/2 tasse` → `1 tasse`
-- **Unités variées** : g, kg, ml, l, cl, cuillères, sachets, pincées...
+- **Fractions** : `1/2 tasse` → `1 tasse` ou `1.5 tasse`
+- **Fractions mixtes** : `1 1/2 tasse` → `3 tasse`
+- **Unités variées** : g, kg, ml, l, cl, cuillères, sachets, pincées, pots...
+
+**Note sur les fractions :** Le système essaie de préserver les fractions communes (1/2, 1/3, 1/4, 2/3, 3/4) dans l'affichage lorsque c'est pertinent. Les autres valeurs sont affichées en décimal avec arrondissage intelligent.
 
 ### Arrondissage intelligent
 
@@ -221,27 +224,52 @@ L'ajusteur détecte et ajuste intelligemment :
 
 **Ajusté pour 6 personnes (×1.5) :**
 - **300g** de farine
-- **0.75** sachet de levure
+- **3/4** sachet de levure (fraction préservée !)
 - **0.75 kg** de beurre
 
-### Ajustement individuel d'ingrédients
+### Ajustement proportionnel intelligent 🎯
 
-En plus de l'ajustement global, vous pouvez modifier **chaque ingrédient individuellement** :
+Vous pouvez **éditer directement n'importe quelle quantité** et tout s'ajuste automatiquement :
 
-1. **Survolez un ingrédient** → des boutons **+** et **−** apparaissent
-2. **Cliquez pour ajuster** la quantité de cet ingrédient spécifique
-3. **Un badge** indique le facteur d'ajustement (ex: ×1.5 = 150% de la quantité)
-4. **Cliquez sur ↻** pour réinitialiser cet ingrédient uniquement
+1. **Cliquez sur "✏️ Modifier les quantités"** pour activer le mode édition
+2. **Cliquez sur une quantité** (ex: "200g") dans n'importe quel ingrédient
+3. **Modifiez la valeur** (ex: changez en "400g")
+4. **Validez** avec Entrée ou en cliquant ailleurs
+5. ✨ **Magie !** Tous les autres ingrédients s'ajustent proportionnellement
+6. 📊 Le **nombre de portions** est aussi mis à jour automatiquement
+7. 🔒 **Cliquez sur "Verrouiller les quantités"** pour désactiver le mode édition
 
-**Cas d'usage :**
-- 🌶️ **Plus d'épices** : Doublez le piment sans toucher au reste
-- 🧂 **Moins de sel** : Réduisez à 50% pour raisons de santé
-- 🍫 **Plus de chocolat** : Parce que pourquoi pas ? 😋
-- 🥕 **Ajuster au goût** : Personnalisez selon vos préférences
+**Exemple concret :**
 
-**Plage d'ajustement :** de 10% (×0.1) à 500% (×5.0)
+Recette originale pour **4 personnes** :
+- 200g de farine
+- 3 œufs
+- 500ml de lait
 
-**Note :** L'ajustement individuel se réinitialise automatiquement quand vous changez le nombre de portions global.
+Vous modifiez la farine à **300g** (×1.5) → Tout devient :
+- 300g de farine ✏️
+- **4.5** œufs (arrondi automatique)
+- **750ml** de lait
+- Portions : **6 personnes**
+
+**Avantages :**
+- 🎯 **Intuitif** : Éditez directement comme dans un tableur
+- 🔄 **Proportionnel** : Tous les ingrédients restent cohérents
+- 👥 **Intelligent** : Le nombre de personnes suit automatiquement
+- ⚡ **Rapide** : Un seul clic pour ajuster toute la recette
+- ↩️ **Réversible** : Bouton "Réinitialiser" pour revenir à l'original
+- 📱 **Universel** : Les ajustements s'appliquent au mode étape par étape et au drawer mobile
+- 🔒 **Sécurisé** : Le mode édition évite les modifications accidentelles
+
+**Raccourcis clavier :**
+- **Entrée** : Valider le changement
+- **Échap** : Annuler et restaurer la valeur précédente
+
+**Synchronisation automatique :**
+Les quantités ajustées sont automatiquement reflétées dans :
+- 📋 Le **drawer mobile** des ingrédients
+- 👨‍🍳 Le **mode étape par étape** (ingrédients par étape)
+- 🍳 Le **drawer "tous les ingrédients"** du mode étape par étape
 
 ## 🎯 Utiliser les sections (pour recettes complexes)
 
