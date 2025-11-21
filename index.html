@@ -1542,30 +1542,35 @@
         }
 
         /* Styles pour le drag & drop */
-        .shopping-ingredient[draggable="true"] {
-            cursor: move;
-            transition: opacity 0.2s ease;
+        .drag-handle {
+            cursor: grab;
+            color: #ccc;
+            font-size: 1.2em;
+            padding: 5px 10px;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            transition: color 0.2s ease;
         }
 
-        .shopping-ingredient.dragging {
+        .drag-handle:hover {
+            color: #666;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+            color: #FF6B6B;
+        }
+
+        .shopping-ingredient.being-dragged {
             opacity: 0.5;
+            background: #f0f0f0;
         }
 
-        .shopping-ingredient.drag-over {
-            border-top: 3px solid #FF6B6B;
-            padding-top: 2px;
-        }
-
-        .shopping-ingredient.drag-ghost {
-            position: fixed;
-            pointer-events: none;
-            z-index: 10000;
-            opacity: 0.8;
-            background: white;
-            border: 2px solid #FF6B6B;
-            border-radius: 10px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-            transform: rotate(3deg);
+        .shopping-ingredient.drag-placeholder {
+            background: linear-gradient(90deg, #FF6B6B 0%, transparent 100%);
+            border-left: 4px solid #FF6B6B;
+            min-height: 50px;
         }
 
         /* Message vide pour "Autres achats" */
@@ -4163,13 +4168,12 @@ console.log('Première recette:', allRecipes[0]);
                     const recipeTag = item.isCustom ? '' : ` <span style="color: #999; font-size: 0.9em;">(${item.recipeName})</span>`;
                     html += `
                         <div class="shopping-ingredient" 
-                             draggable="true"
                              data-recipe-id="${item.recipeId}"
-                             data-ingredient-id="${item.ingredient.id}"
-                             ondragstart="handleDragStart(event, '${item.recipeId}', '${item.ingredient.id}')"
-                             ondragover="handleDragOver(event)"
-                             ondrop="handleDrop(event, '${item.recipeId}', '${item.ingredient.id}')"
-                             ondragend="handleDragEnd(event)">
+                             data-ingredient-id="${item.ingredient.id}">
+                            <span class="drag-handle" 
+                                  onmousedown="startDrag(event, '${item.recipeId}', '${item.ingredient.id}')">
+                                ⋮⋮
+                            </span>
                             <input type="checkbox" class="shopping-ingredient-checkbox" 
                                    onchange="toggleIngredientChecked('${item.recipeId}', '${item.ingredient.id}')">
                             <span class="shopping-ingredient-text">${item.ingredient.text}${recipeTag}</span>
@@ -4232,97 +4236,109 @@ console.log('Première recette:', allRecipes[0]);
             content.innerHTML = html;
         }
 
-        // Variables pour le drag & drop
-        let draggedItem = null;
-        let dragGhost = null;
+        // Variables pour le drag & drop (nouveau système style Google Keep)
+        let dragging = {
+            active: false,
+            element: null,
+            recipeId: null,
+            ingredientId: null,
+            placeholder: null,
+            startY: 0,
+            currentY: 0
+        };
 
-        function handleDragStart(event, recipeId, ingredientId) {
-            draggedItem = { recipeId, ingredientId };
-            event.currentTarget.classList.add('dragging');
+        function startDrag(event, recipeId, ingredientId) {
+            event.preventDefault();
             
-            // Créer l'élément fantôme
-            dragGhost = event.currentTarget.cloneNode(true);
-            dragGhost.classList.add('drag-ghost');
-            dragGhost.classList.remove('dragging');
-            dragGhost.style.position = 'fixed';
-            dragGhost.style.left = event.clientX + 10 + 'px';
-            dragGhost.style.top = event.clientY + 10 + 'px';
-            dragGhost.style.width = event.currentTarget.offsetWidth + 'px';
-            document.body.appendChild(dragGhost);
+            dragging.active = true;
+            dragging.recipeId = recipeId;
+            dragging.ingredientId = ingredientId;
+            dragging.startY = event.clientY;
             
-            // Ajouter l'événement de mouvement
-            document.addEventListener('dragover', handleDragMove);
+            // Trouver l'élément parent .shopping-ingredient
+            dragging.element = event.target.closest('.shopping-ingredient');
+            dragging.element.classList.add('being-dragged');
+            
+            // Créer un placeholder
+            dragging.placeholder = document.createElement('div');
+            dragging.placeholder.className = 'shopping-ingredient drag-placeholder';
+            dragging.placeholder.style.height = dragging.element.offsetHeight + 'px';
+            
+            // Ajouter les listeners
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', endDrag);
         }
 
-        function handleDragMove(event) {
-            if (dragGhost) {
-                dragGhost.style.left = event.clientX + 10 + 'px';
-                dragGhost.style.top = event.clientY + 10 + 'px';
+        function onDragMove(event) {
+            if (!dragging.active) return;
+            
+            dragging.currentY = event.clientY;
+            
+            // Trouver l'élément sous la souris
+            const elementBelow = document.elementFromPoint(event.clientX, event.clientY);
+            const ingredientBelow = elementBelow?.closest('.shopping-ingredient');
+            
+            if (ingredientBelow && ingredientBelow !== dragging.element && 
+                ingredientBelow !== dragging.placeholder) {
+                
+                // Déterminer si on insère avant ou après
+                const rect = ingredientBelow.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (event.clientY < midpoint) {
+                    ingredientBelow.parentNode.insertBefore(dragging.placeholder, ingredientBelow);
+                } else {
+                    ingredientBelow.parentNode.insertBefore(dragging.placeholder, ingredientBelow.nextSibling);
+                }
             }
         }
 
-        function handleDragOver(event) {
-            event.preventDefault();
-            event.currentTarget.classList.add('drag-over');
-        }
-
-        function handleDrop(event, targetRecipeId, targetIngredientId) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('drag-over');
-
-            if (!draggedItem) return;
-
-            // Ne rien faire si on dépose sur le même élément
-            if (draggedItem.recipeId === targetRecipeId && draggedItem.ingredientId === targetIngredientId) {
-                return;
-            }
-
-            // Collecter tous les ingrédients pour construire l'ordre
-            let allIngredients = [];
-            shoppingList.recipes.forEach(recipe => {
-                recipe.ingredients.forEach(ingredient => {
-                    allIngredients.push({
-                        recipeId: recipe.id,
-                        ingredientId: ingredient.id
-                    });
-                });
-            });
-
-            // Trouver les index source et cible
-            const sourceIndex = allIngredients.findIndex(
-                item => item.recipeId === draggedItem.recipeId && item.ingredientId === draggedItem.ingredientId
-            );
-            const targetIndex = allIngredients.findIndex(
-                item => item.recipeId === targetRecipeId && item.ingredientId === targetIngredientId
-            );
-
-            if (sourceIndex !== -1 && targetIndex !== -1) {
-                // Retirer l'élément source
-                const [movedItem] = allIngredients.splice(sourceIndex, 1);
-                // L'insérer à la position cible
-                allIngredients.splice(targetIndex, 0, movedItem);
-
+        function endDrag(event) {
+            if (!dragging.active) return;
+            
+            dragging.element.classList.remove('being-dragged');
+            
+            // Si le placeholder est dans le DOM, effectuer le déplacement
+            if (dragging.placeholder.parentNode) {
+                // Insérer l'élément à la bonne position
+                dragging.placeholder.parentNode.insertBefore(dragging.element, dragging.placeholder);
+                dragging.placeholder.remove();
+                
                 // Sauvegarder le nouvel ordre
-                shoppingList.flatOrder = allIngredients;
-                saveShoppingListToStorage();
-                renderShoppingList();
+                updateFlatOrderFromDOM();
             }
+            
+            // Nettoyer
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', endDrag);
+            dragging = {
+                active: false,
+                element: null,
+                recipeId: null,
+                ingredientId: null,
+                placeholder: null,
+                startY: 0,
+                currentY: 0
+            };
         }
 
-        function handleDragEnd(event) {
-            event.currentTarget.classList.remove('dragging');
-            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        function updateFlatOrderFromDOM() {
+            const section = document.querySelector('.shopping-section');
+            if (!section) return;
             
-            // Supprimer l'élément fantôme
-            if (dragGhost) {
-                document.body.removeChild(dragGhost);
-                dragGhost = null;
-            }
+            const newOrder = [];
+            const ingredients = section.querySelectorAll('.shopping-ingredient:not(.drag-placeholder)');
             
-            // Retirer l'événement de mouvement
-            document.removeEventListener('dragover', handleDragMove);
+            ingredients.forEach(ing => {
+                const recipeId = ing.dataset.recipeId;
+                const ingredientId = ing.dataset.ingredientId;
+                if (recipeId && ingredientId) {
+                    newOrder.push({ recipeId, ingredientId });
+                }
+            });
             
-            draggedItem = null;
+            shoppingList.flatOrder = newOrder;
+            saveShoppingListToStorage();
         }
 
         // Charger la liste au démarrage
