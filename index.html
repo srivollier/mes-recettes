@@ -3887,11 +3887,10 @@ console.log('Première recette:', allRecipes[0]);
                 const toBuyIngredients = recipe.ingredients.filter(i => !i.checked);
                 const ownedIngredients = recipe.ingredients.filter(i => i.checked);
 
-                // Pour "Autres achats", on l'ajoute toujours même si vide
+                // Pour "Autres achats", TOUJOURS l'ajouter dans "À acheter" (pour garder le formulaire accessible)
                 if (recipe.isCustom) {
-                    if (toBuyIngredients.length > 0 || ownedIngredients.length === 0) {
-                        toBuy.push({ recipe, ingredients: toBuyIngredients });
-                    }
+                    toBuy.push({ recipe, ingredients: toBuyIngredients });
+                    // Les articles cochés peuvent aussi apparaître dans "Déjà en possession"
                     if (ownedIngredients.length > 0) {
                         owned.push({ recipe, ingredients: ownedIngredients });
                     }
