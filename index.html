@@ -1556,6 +1556,18 @@
             padding-top: 2px;
         }
 
+        .shopping-ingredient.drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            opacity: 0.8;
+            background: white;
+            border: 2px solid #FF6B6B;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transform: rotate(3deg);
+        }
+
         /* Message vide pour "Autres achats" */
         .shopping-empty-custom {
             text-align: center;
@@ -2222,7 +2234,7 @@
             <div class="shopping-header-title">🛒 Ma Liste de Courses</div>
             <div class="shopping-header-actions">
                 <button class="shopping-view-toggle" id="shoppingViewToggle" onclick="toggleShoppingView()">
-                    <span id="shoppingViewText">📄 Liste plate</span>
+                    <span id="shoppingViewText">🔀 Vue personnalisée</span>
                 </button>
                 <button class="shopping-close-btn" onclick="closeShoppingList()">×</button>
             </div>
@@ -3630,7 +3642,8 @@ console.log('Première recette:', allRecipes[0]);
         function updateShoppingListBadge() {
             const badge = document.getElementById('shoppingListBadge');
             if (badge) {
-                const count = shoppingList.recipes.length;
+                // Compter seulement les recettes avec ingrédients
+                const count = shoppingList.recipes.filter(r => r.ingredients.length > 0).length;
                 badge.textContent = count;
                 badge.style.display = count > 0 ? 'inline-block' : 'none';
             }
@@ -3687,7 +3700,7 @@ console.log('Première recette:', allRecipes[0]);
         function toggleShoppingView() {
             shoppingListViewMode = shoppingListViewMode === 'recipe' ? 'flat' : 'recipe';
             const viewText = document.getElementById('shoppingViewText');
-            viewText.textContent = shoppingListViewMode === 'recipe' ? '📄 Liste plate' : '📝 Vue par recettes';
+            viewText.textContent = shoppingListViewMode === 'recipe' ? '🔀 Vue personnalisée' : '📝 Vue par recettes';
             renderShoppingList();
         }
 
@@ -3807,7 +3820,21 @@ console.log('Première recette:', allRecipes[0]);
 
         function clearShoppingList() {
             if (confirm('Voulez-vous vraiment vider toute votre liste de courses ?')) {
-                shoppingList = { recipes: [], flatOrder: [] };
+                // Conserver "Autres Achats" mais vider tous les ingrédients
+                const customRecipe = shoppingList.recipes.find(r => r.id === 'custom-items');
+                if (customRecipe) {
+                    shoppingList = { 
+                        recipes: [{
+                            id: 'custom-items',
+                            name: 'Autres achats',
+                            isCustom: true,
+                            ingredients: []
+                        }], 
+                        flatOrder: [] 
+                    };
+                } else {
+                    shoppingList = { recipes: [], flatOrder: [] };
+                }
                 saveShoppingListToStorage();
                 updateShoppingListBadge();
                 renderShoppingList();
@@ -4153,6 +4180,22 @@ console.log('Première recette:', allRecipes[0]);
                 html += `</div>`;
             }
 
+            // Formulaire d'ajout d'articles (placé juste après "À acheter")
+            html += `
+                <div class="shopping-add-section" style="margin: 20px auto;">
+                    <div class="shopping-add-form">
+                        <input type="text" 
+                               id="customIngredientInput" 
+                               class="shopping-add-input"
+                               placeholder="➕ Ajouter un article rapide..." 
+                               onkeypress="if(event.key==='Enter') addCustomIngredient()">
+                        <button class="shopping-add-btn" onclick="addCustomIngredient()">
+                            Ajouter
+                        </button>
+                    </div>
+                </div>
+            `;
+
             // Section "Déjà en possession"
             if (owned.length > 0) {
                 html += `
@@ -4186,34 +4229,36 @@ console.log('Première recette:', allRecipes[0]);
                 </div>
             `;
 
-            // Section d'ajout d'articles personnels
-            html += `
-                <div class="shopping-add-section">
-                    <div class="shopping-add-title">
-                        ➕ Ajouter un article
-                    </div>
-                    <div class="shopping-add-form">
-                        <input type="text" 
-                               id="customIngredientInput" 
-                               class="shopping-add-input"
-                               placeholder="Ex: Pain, savon, dentifrice..." 
-                               onkeypress="if(event.key==='Enter') addCustomIngredient()">
-                        <button class="shopping-add-btn" onclick="addCustomIngredient()">
-                            Ajouter
-                        </button>
-                    </div>
-                </div>
-            `;
-
             content.innerHTML = html;
         }
 
         // Variables pour le drag & drop
         let draggedItem = null;
+        let dragGhost = null;
 
         function handleDragStart(event, recipeId, ingredientId) {
             draggedItem = { recipeId, ingredientId };
             event.currentTarget.classList.add('dragging');
+            
+            // Créer l'élément fantôme
+            dragGhost = event.currentTarget.cloneNode(true);
+            dragGhost.classList.add('drag-ghost');
+            dragGhost.classList.remove('dragging');
+            dragGhost.style.position = 'fixed';
+            dragGhost.style.left = event.clientX + 10 + 'px';
+            dragGhost.style.top = event.clientY + 10 + 'px';
+            dragGhost.style.width = event.currentTarget.offsetWidth + 'px';
+            document.body.appendChild(dragGhost);
+            
+            // Ajouter l'événement de mouvement
+            document.addEventListener('dragover', handleDragMove);
+        }
+
+        function handleDragMove(event) {
+            if (dragGhost) {
+                dragGhost.style.left = event.clientX + 10 + 'px';
+                dragGhost.style.top = event.clientY + 10 + 'px';
+            }
         }
 
         function handleDragOver(event) {
@@ -4267,6 +4312,16 @@ console.log('Première recette:', allRecipes[0]);
         function handleDragEnd(event) {
             event.currentTarget.classList.remove('dragging');
             document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            
+            // Supprimer l'élément fantôme
+            if (dragGhost) {
+                document.body.removeChild(dragGhost);
+                dragGhost = null;
+            }
+            
+            // Retirer l'événement de mouvement
+            document.removeEventListener('dragover', handleDragMove);
+            
             draggedItem = null;
         }
 
