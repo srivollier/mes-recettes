@@ -1551,6 +1551,8 @@
             display: inline-flex;
             align-items: center;
             transition: color 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
         }
 
         .drag-handle:hover {
@@ -4171,7 +4173,8 @@ console.log('Première recette:', allRecipes[0]);
                              data-recipe-id="${item.recipeId}"
                              data-ingredient-id="${item.ingredient.id}">
                             <span class="drag-handle" 
-                                  onmousedown="startDrag(event, '${item.recipeId}', '${item.ingredient.id}')">
+                                  onmousedown="startDrag(event, '${item.recipeId}', '${item.ingredient.id}')"
+                                  ontouchstart="startDrag(event, '${item.recipeId}', '${item.ingredient.id}')">
                                 ⋮⋮
                             </span>
                             <input type="checkbox" class="shopping-ingredient-checkbox" 
@@ -4237,6 +4240,15 @@ console.log('Première recette:', allRecipes[0]);
         }
 
         // Variables pour le drag & drop (nouveau système style Google Keep)
+        function getEventCoordinates(event) {
+            // Gérer à la fois mouse et touch events
+            if (event.type.startsWith('touch')) {
+                const touch = event.touches[0] || event.changedTouches[0];
+                return { clientX: touch.clientX, clientY: touch.clientY };
+            }
+            return { clientX: event.clientX, clientY: event.clientY };
+        }
+
         let dragging = {
             active: false,
             element: null,
@@ -4244,38 +4256,68 @@ console.log('Première recette:', allRecipes[0]);
             ingredientId: null,
             placeholder: null,
             startY: 0,
-            currentY: 0
+            currentY: 0,
+            offsetX: 0,
+            offsetY: 0,
+            originalRect: null
         };
 
         function startDrag(event, recipeId, ingredientId) {
             event.preventDefault();
             
+            const coords = getEventCoordinates(event);
+            
             dragging.active = true;
             dragging.recipeId = recipeId;
             dragging.ingredientId = ingredientId;
-            dragging.startY = event.clientY;
             
             // Trouver l'élément parent .shopping-ingredient
             dragging.element = event.target.closest('.shopping-ingredient');
-            dragging.element.classList.add('being-dragged');
             
-            // Créer un placeholder
+            // Stocker la position originale
+            const rect = dragging.element.getBoundingClientRect();
+            dragging.originalRect = rect;
+            dragging.offsetX = coords.clientX - rect.left;
+            dragging.offsetY = coords.clientY - rect.top;
+            
+            // Créer un placeholder à la place de l'élément
             dragging.placeholder = document.createElement('div');
             dragging.placeholder.className = 'shopping-ingredient drag-placeholder';
-            dragging.placeholder.style.height = dragging.element.offsetHeight + 'px';
+            dragging.placeholder.style.height = rect.height + 'px';
+            dragging.element.parentNode.insertBefore(dragging.placeholder, dragging.element);
             
-            // Ajouter les listeners
+            // Mettre l'élément en position fixed pour qu'il suive la souris/doigt
+            dragging.element.style.position = 'fixed';
+            dragging.element.style.width = rect.width + 'px';
+            dragging.element.style.left = rect.left + 'px';
+            dragging.element.style.top = rect.top + 'px';
+            dragging.element.style.zIndex = '10000';
+            dragging.element.style.pointerEvents = 'none';
+            dragging.element.classList.add('being-dragged');
+            
+            // Ajouter les listeners pour MOUSE et TOUCH
             document.addEventListener('mousemove', onDragMove);
             document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', endDrag);
         }
 
         function onDragMove(event) {
             if (!dragging.active) return;
             
-            dragging.currentY = event.clientY;
+            // Empêcher le scroll sur mobile pendant le drag
+            if (event.type.startsWith('touch')) {
+                event.preventDefault();
+            }
             
-            // Trouver l'élément sous la souris
-            const elementBelow = document.elementFromPoint(event.clientX, event.clientY);
+            const coords = getEventCoordinates(event);
+            
+            // Déplacer l'élément avec la souris/doigt
+            dragging.element.style.left = (coords.clientX - dragging.offsetX) + 'px';
+            dragging.element.style.top = (coords.clientY - dragging.offsetY) + 'px';
+            
+            // Trouver l'élément sous la souris/doigt (utiliser le centre de l'élément déplacé)
+            const elementBelow = document.elementFromPoint(coords.clientX, coords.clientY);
             const ingredientBelow = elementBelow?.closest('.shopping-ingredient');
             
             if (ingredientBelow && ingredientBelow !== dragging.element && 
@@ -4285,7 +4327,7 @@ console.log('Première recette:', allRecipes[0]);
                 const rect = ingredientBelow.getBoundingClientRect();
                 const midpoint = rect.top + rect.height / 2;
                 
-                if (event.clientY < midpoint) {
+                if (coords.clientY < midpoint) {
                     ingredientBelow.parentNode.insertBefore(dragging.placeholder, ingredientBelow);
                 } else {
                     ingredientBelow.parentNode.insertBefore(dragging.placeholder, ingredientBelow.nextSibling);
@@ -4296,6 +4338,13 @@ console.log('Première recette:', allRecipes[0]);
         function endDrag(event) {
             if (!dragging.active) return;
             
+            // Remettre l'élément dans le flux normal
+            dragging.element.style.position = '';
+            dragging.element.style.width = '';
+            dragging.element.style.left = '';
+            dragging.element.style.top = '';
+            dragging.element.style.zIndex = '';
+            dragging.element.style.pointerEvents = '';
             dragging.element.classList.remove('being-dragged');
             
             // Si le placeholder est dans le DOM, effectuer le déplacement
@@ -4308,9 +4357,12 @@ console.log('Première recette:', allRecipes[0]);
                 updateFlatOrderFromDOM();
             }
             
-            // Nettoyer
+            // Nettoyer - retirer TOUS les listeners (mouse ET touch)
             document.removeEventListener('mousemove', onDragMove);
             document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', endDrag);
+            
             dragging = {
                 active: false,
                 element: null,
@@ -4318,7 +4370,10 @@ console.log('Première recette:', allRecipes[0]);
                 ingredientId: null,
                 placeholder: null,
                 startY: 0,
-                currentY: 0
+                currentY: 0,
+                offsetX: 0,
+                offsetY: 0,
+                originalRect: null
             };
         }
 
