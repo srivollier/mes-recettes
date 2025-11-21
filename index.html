@@ -1541,6 +1541,22 @@
             transform: translateY(0);
         }
 
+        /* Message vide pour "Autres achats" */
+        .shopping-empty-custom {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+            font-size: 0.95em;
+        }
+
+        /* Formulaire d'ajout inline dans "Autres achats" */
+        .shopping-add-inline {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #e0e0e0;
+        }
+
         @media (max-width: 768px) {
             .shopping-add-section {
                 padding: 20px;
@@ -3820,10 +3836,7 @@ console.log('Première recette:', allRecipes[0]);
             // Garder uniquement les ingrédients non cochés
             customRecipe.ingredients = customRecipe.ingredients.filter(ing => !ing.checked);
             
-            // Si la recette est vide, la supprimer
-            if (customRecipe.ingredients.length === 0) {
-                shoppingList.recipes = shoppingList.recipes.filter(r => r.id !== 'custom-items');
-            }
+            // Note: On garde la recette même si elle est vide pour qu'elle reste visible
             
             // Sauvegarder et rafraîchir
             saveShoppingListToStorage();
@@ -3853,6 +3866,19 @@ console.log('Première recette:', allRecipes[0]);
         }
 
         function renderShoppingListByRecipe(content) {
+            // S'assurer que "Autres achats" existe
+            let customRecipe = shoppingList.recipes.find(r => r.id === 'custom-items');
+            if (!customRecipe) {
+                customRecipe = {
+                    id: 'custom-items',
+                    name: 'Autres achats',
+                    isCustom: true,
+                    ingredients: []
+                };
+                shoppingList.recipes.push(customRecipe);
+                saveShoppingListToStorage();
+            }
+
             // Séparer les ingrédients cochés et non cochés
             const toBuy = [];
             const owned = [];
@@ -3861,11 +3887,22 @@ console.log('Première recette:', allRecipes[0]);
                 const toBuyIngredients = recipe.ingredients.filter(i => !i.checked);
                 const ownedIngredients = recipe.ingredients.filter(i => i.checked);
 
-                if (toBuyIngredients.length > 0) {
-                    toBuy.push({ recipe, ingredients: toBuyIngredients });
-                }
-                if (ownedIngredients.length > 0) {
-                    owned.push({ recipe, ingredients: ownedIngredients });
+                // Pour "Autres achats", on l'ajoute toujours même si vide
+                if (recipe.isCustom) {
+                    if (toBuyIngredients.length > 0 || ownedIngredients.length === 0) {
+                        toBuy.push({ recipe, ingredients: toBuyIngredients });
+                    }
+                    if (ownedIngredients.length > 0) {
+                        owned.push({ recipe, ingredients: ownedIngredients });
+                    }
+                } else {
+                    // Pour les autres recettes, comportement normal
+                    if (toBuyIngredients.length > 0) {
+                        toBuy.push({ recipe, ingredients: toBuyIngredients });
+                    }
+                    if (ownedIngredients.length > 0) {
+                        owned.push({ recipe, ingredients: ownedIngredients });
+                    }
                 }
             });
 
@@ -3902,15 +3939,42 @@ console.log('Première recette:', allRecipes[0]);
                             </div>
                     `;
 
-                    ingredients.forEach(ingredient => {
+                    // Afficher les ingrédients ou un message si vide (pour "Autres achats")
+                    if (ingredients.length === 0 && recipe.isCustom) {
                         html += `
-                            <div class="shopping-ingredient">
-                                <input type="checkbox" class="shopping-ingredient-checkbox" 
-                                       onchange="toggleIngredientChecked('${recipe.id}', '${ingredient.id}')">
-                                <span class="shopping-ingredient-text">${ingredient.text}</span>
+                            <div class="shopping-empty-custom">
+                                Aucun article ajouté
                             </div>
                         `;
-                    });
+                    } else {
+                        ingredients.forEach(ingredient => {
+                            html += `
+                                <div class="shopping-ingredient">
+                                    <input type="checkbox" class="shopping-ingredient-checkbox" 
+                                           onchange="toggleIngredientChecked('${recipe.id}', '${ingredient.id}')">
+                                    <span class="shopping-ingredient-text">${ingredient.text}</span>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    // Ajouter le formulaire d'ajout pour "Autres achats"
+                    if (recipe.isCustom) {
+                        html += `
+                            <div class="shopping-add-inline">
+                                <div class="shopping-add-form">
+                                    <input type="text" 
+                                           id="customIngredientInput" 
+                                           class="shopping-add-input"
+                                           placeholder="Ex: Pain, savon, dentifrice..." 
+                                           onkeypress="if(event.key==='Enter') addCustomIngredient()">
+                                    <button class="shopping-add-btn" onclick="addCustomIngredient()">
+                                        ➕ Ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     html += `</div>`;
                 });
@@ -3961,25 +4025,6 @@ console.log('Première recette:', allRecipes[0]);
                     <button class="shopping-clear-btn" onclick="clearShoppingList()">
                         🗑️ Vider la liste
                     </button>
-                </div>
-            `;
-
-            // Section d'ajout d'articles personnels
-            html += `
-                <div class="shopping-add-section">
-                    <div class="shopping-add-title">
-                        ➕ Ajouter un article
-                    </div>
-                    <div class="shopping-add-form">
-                        <input type="text" 
-                               id="customIngredientInput" 
-                               class="shopping-add-input"
-                               placeholder="Ex: Pain, savon, dentifrice..." 
-                               onkeypress="if(event.key==='Enter') addCustomIngredient()">
-                        <button class="shopping-add-btn" onclick="addCustomIngredient()">
-                            Ajouter
-                        </button>
-                    </div>
                 </div>
             `;
 
