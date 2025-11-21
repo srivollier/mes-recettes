@@ -1541,6 +1541,21 @@
             transform: translateY(0);
         }
 
+        /* Styles pour le drag & drop */
+        .shopping-ingredient[draggable="true"] {
+            cursor: move;
+            transition: opacity 0.2s ease;
+        }
+
+        .shopping-ingredient.dragging {
+            opacity: 0.5;
+        }
+
+        .shopping-ingredient.drag-over {
+            border-top: 3px solid #FF6B6B;
+            padding-top: 2px;
+        }
+
         /* Message vide pour "Autres achats" */
         .shopping-empty-custom {
             text-align: center;
@@ -2207,7 +2222,7 @@
             <div class="shopping-header-title">🛒 Ma Liste de Courses</div>
             <div class="shopping-header-actions">
                 <button class="shopping-view-toggle" id="shoppingViewToggle" onclick="toggleShoppingView()">
-                    <span id="shoppingViewText">Vue par catégories</span>
+                    <span id="shoppingViewText">📄 Liste plate</span>
                 </button>
                 <button class="shopping-close-btn" onclick="closeShoppingList()">×</button>
             </div>
@@ -2232,9 +2247,10 @@
 
         // ===== LISTE DE COURSES =====
         let shoppingList = {
-            recipes: []
+            recipes: [],
+            flatOrder: []  // Ordre personnalisé pour la vue liste plate: [{recipeId, ingredientId}, ...]
         };
-        let shoppingListViewMode = 'recipe'; // 'recipe' ou 'category'
+        let shoppingListViewMode = 'recipe'; // 'recipe' ou 'flat'
         
         let webAppUrl = localStorage.getItem('webAppUrl') || DEFAULT_WEB_APP_URL;
 
@@ -3669,9 +3685,9 @@ console.log('Première recette:', allRecipes[0]);
         }
 
         function toggleShoppingView() {
-            shoppingListViewMode = shoppingListViewMode === 'recipe' ? 'category' : 'recipe';
+            shoppingListViewMode = shoppingListViewMode === 'recipe' ? 'flat' : 'recipe';
             const viewText = document.getElementById('shoppingViewText');
-            viewText.textContent = shoppingListViewMode === 'recipe' ? 'Vue par catégories' : 'Vue par recettes';
+            viewText.textContent = shoppingListViewMode === 'recipe' ? '📄 Liste plate' : '📝 Vue par recettes';
             renderShoppingList();
         }
 
@@ -3742,6 +3758,18 @@ console.log('Première recette:', allRecipes[0]);
             };
 
             shoppingList.recipes.push(newRecipe);
+            
+            // Ajouter tous les nouveaux ingrédients à flatOrder (à la fin)
+            if (!shoppingList.flatOrder) {
+                shoppingList.flatOrder = [];
+            }
+            ingredients.forEach(ingredient => {
+                shoppingList.flatOrder.push({
+                    recipeId: newRecipe.id,
+                    ingredientId: ingredient.id
+                });
+            });
+            
             saveShoppingListToStorage();
             updateShoppingListBadge();
 
@@ -3753,6 +3781,12 @@ console.log('Première recette:', allRecipes[0]);
         function removeRecipeFromShoppingList(recipeId) {
             if (confirm('Voulez-vous vraiment supprimer cette recette de votre liste de courses ?')) {
                 shoppingList.recipes = shoppingList.recipes.filter(r => r.id !== recipeId);
+                
+                // Retirer les ingrédients de cette recette de flatOrder
+                if (shoppingList.flatOrder) {
+                    shoppingList.flatOrder = shoppingList.flatOrder.filter(item => item.recipeId !== recipeId);
+                }
+                
                 saveShoppingListToStorage();
                 updateShoppingListBadge();
                 renderShoppingList();
@@ -3773,7 +3807,7 @@ console.log('Première recette:', allRecipes[0]);
 
         function clearShoppingList() {
             if (confirm('Voulez-vous vraiment vider toute votre liste de courses ?')) {
-                shoppingList = { recipes: [] };
+                shoppingList = { recipes: [], flatOrder: [] };
                 saveShoppingListToStorage();
                 updateShoppingListBadge();
                 renderShoppingList();
@@ -3818,6 +3852,15 @@ console.log('Première recette:', allRecipes[0]);
             
             customRecipe.ingredients.push(newIngredient);
             
+            // Ajouter à flatOrder (à la fin)
+            if (!shoppingList.flatOrder) {
+                shoppingList.flatOrder = [];
+            }
+            shoppingList.flatOrder.push({
+                recipeId: customRecipe.id,
+                ingredientId: newIngredient.id
+            });
+            
             // Sauvegarder et rafraîchir
             saveShoppingListToStorage();
             updateShoppingListBadge();
@@ -3833,8 +3876,20 @@ console.log('Première recette:', allRecipes[0]);
             
             if (!customRecipe) return;
             
+            // Récupérer les IDs des ingrédients cochés avant de les supprimer
+            const checkedIngredientIds = customRecipe.ingredients
+                .filter(ing => ing.checked)
+                .map(ing => ing.id);
+            
             // Garder uniquement les ingrédients non cochés
             customRecipe.ingredients = customRecipe.ingredients.filter(ing => !ing.checked);
+            
+            // Retirer ces ingrédients de flatOrder
+            if (shoppingList.flatOrder && checkedIngredientIds.length > 0) {
+                shoppingList.flatOrder = shoppingList.flatOrder.filter(item => 
+                    !(item.recipeId === 'custom-items' && checkedIngredientIds.includes(item.ingredientId))
+                );
+            }
             
             // Note: On garde la recette même si elle est vide pour qu'elle reste visible
             
@@ -3860,8 +3915,8 @@ console.log('Première recette:', allRecipes[0]);
 
             if (shoppingListViewMode === 'recipe') {
                 renderShoppingListByRecipe(content);
-            } else {
-                renderShoppingListByCategory(content);
+            } else if (shoppingListViewMode === 'flat') {
+                renderShoppingListFlat(content);
             }
         }
 
@@ -4030,124 +4085,93 @@ console.log('Première recette:', allRecipes[0]);
             content.innerHTML = html;
         }
 
-        function renderShoppingListByCategory(content) {
-            // Regrouper tous les ingrédients par catégorie
-            const ingredientsByCategory = {};
-            const categoriesOrder = [
-                "Fruits & Légumes",
-                "Viandes & Poissons",
-                "Produits laitiers",
-                "Épicerie",
-                "Épices & Condiments",
-                "Autres"
-            ];
-
+        function renderShoppingListFlat(content) {
+            // Collecter tous les ingrédients de toutes les recettes
+            let allIngredients = [];
+            
             shoppingList.recipes.forEach(recipe => {
                 recipe.ingredients.forEach(ingredient => {
-                    const category = ingredient.category;
-                    if (!ingredientsByCategory[category]) {
-                        ingredientsByCategory[category] = { toBuy: [], owned: [] };
-                    }
-
-                    const item = {
-                        ...ingredient,
+                    allIngredients.push({
+                        recipeId: recipe.id,
                         recipeName: recipe.name,
-                        recipeId: recipe.id
-                    };
-
-                    if (ingredient.checked) {
-                        ingredientsByCategory[category].owned.push(item);
-                    } else {
-                        ingredientsByCategory[category].toBuy.push(item);
-                    }
+                        ingredient: ingredient,
+                        isCustom: recipe.isCustom
+                    });
                 });
             });
 
+            // Appliquer l'ordre personnalisé si disponible
+            if (shoppingList.flatOrder && shoppingList.flatOrder.length > 0) {
+                const orderMap = new Map();
+                shoppingList.flatOrder.forEach((item, index) => {
+                    orderMap.set(`${item.recipeId}-${item.ingredientId}`, index);
+                });
+
+                allIngredients.sort((a, b) => {
+                    const keyA = `${a.recipeId}-${a.ingredient.id}`;
+                    const keyB = `${b.recipeId}-${b.ingredient.id}`;
+                    const indexA = orderMap.has(keyA) ? orderMap.get(keyA) : 9999;
+                    const indexB = orderMap.has(keyB) ? orderMap.get(keyB) : 9999;
+                    return indexA - indexB;
+                });
+            }
+
+            // Séparer en "À acheter" et "Déjà en possession"
+            const toBuy = allIngredients.filter(item => !item.ingredient.checked);
+            const owned = allIngredients.filter(item => item.ingredient.checked);
+
             let html = '';
 
-            // Section "À acheter" par catégories
-            const toBuyCategories = categoriesOrder.filter(cat => 
-                ingredientsByCategory[cat] && ingredientsByCategory[cat].toBuy.length > 0
-            );
-
-            if (toBuyCategories.length > 0) {
-                const totalToBuy = toBuyCategories.reduce((sum, cat) => 
-                    sum + ingredientsByCategory[cat].toBuy.length, 0
-                );
-
+            // Section "À acheter"
+            if (toBuy.length > 0) {
                 html += `
                     <div class="shopping-section">
                         <div class="shopping-section-title">
                             🛒 À acheter
-                            <span class="shopping-section-count">${totalToBuy}</span>
+                            <span class="shopping-section-count">${toBuy.length}</span>
                         </div>
                 `;
 
-                toBuyCategories.forEach(category => {
-                    const items = ingredientsByCategory[category].toBuy;
+                toBuy.forEach(item => {
+                    const recipeTag = item.isCustom ? '' : ` <span style="color: #999; font-size: 0.9em;">(${item.recipeName})</span>`;
                     html += `
-                        <div class="shopping-category-group">
-                            <div class="shopping-category-name">${category}</div>
+                        <div class="shopping-ingredient" 
+                             draggable="true"
+                             data-recipe-id="${item.recipeId}"
+                             data-ingredient-id="${item.ingredient.id}"
+                             ondragstart="handleDragStart(event, '${item.recipeId}', '${item.ingredient.id}')"
+                             ondragover="handleDragOver(event)"
+                             ondrop="handleDrop(event, '${item.recipeId}', '${item.ingredient.id}')"
+                             ondragend="handleDragEnd(event)">
+                            <input type="checkbox" class="shopping-ingredient-checkbox" 
+                                   onchange="toggleIngredientChecked('${item.recipeId}', '${item.ingredient.id}')">
+                            <span class="shopping-ingredient-text">${item.ingredient.text}${recipeTag}</span>
+                        </div>
                     `;
-
-                    items.forEach(ingredient => {
-                        html += `
-                            <div class="shopping-ingredient">
-                                <input type="checkbox" class="shopping-ingredient-checkbox" 
-                                       onchange="toggleIngredientChecked('${ingredient.recipeId}', '${ingredient.id}')">
-                                <span class="shopping-ingredient-text">
-                                    ${ingredient.text}
-                                    <span style="color: #999; font-size: 0.85em; font-style: italic;"> (${ingredient.recipeName})</span>
-                                </span>
-                            </div>
-                        `;
-                    });
-
-                    html += `</div>`;
                 });
 
                 html += `</div>`;
             }
 
-            // Section "Déjà en possession" par catégories
-            const ownedCategories = categoriesOrder.filter(cat => 
-                ingredientsByCategory[cat] && ingredientsByCategory[cat].owned.length > 0
-            );
-
-            if (ownedCategories.length > 0) {
-                const totalOwned = ownedCategories.reduce((sum, cat) => 
-                    sum + ingredientsByCategory[cat].owned.length, 0
-                );
-
+            // Section "Déjà en possession"
+            if (owned.length > 0) {
                 html += `
                     <div class="shopping-section">
                         <div class="shopping-section-title">
                             ✓ Déjà en possession
-                            <span class="shopping-section-count">${totalOwned}</span>
+                            <span class="shopping-section-count">${owned.length}</span>
                         </div>
                 `;
 
-                ownedCategories.forEach(category => {
-                    const items = ingredientsByCategory[category].owned;
+                owned.forEach(item => {
+                    const recipeTag = item.isCustom ? '' : ` <span style="color: #999; font-size: 0.9em;">(${item.recipeName})</span>`;
                     html += `
-                        <div class="shopping-category-group">
-                            <div class="shopping-category-name">${category}</div>
+                        <div class="shopping-ingredient checked">
+                            <input type="checkbox" class="shopping-ingredient-checkbox" checked
+                                   onchange="toggleIngredientChecked('${item.recipeId}', '${item.ingredient.id}')">
+                            <span class="shopping-ingredient-text">${item.ingredient.text}${recipeTag}</span>
+                        </div>
                     `;
-
-                    items.forEach(ingredient => {
-                        html += `
-                            <div class="shopping-ingredient checked">
-                                <input type="checkbox" class="shopping-ingredient-checkbox" checked
-                                       onchange="toggleIngredientChecked('${ingredient.recipeId}', '${ingredient.id}')">
-                                <span class="shopping-ingredient-text">
-                                    ${ingredient.text}
-                                    <span style="color: #999; font-size: 0.85em; font-style: italic;"> (${ingredient.recipeName})</span>
-                                </span>
-                            </div>
-                        `;
-                    });
-
-                    html += `</div>`;
                 });
 
                 html += `</div>`;
@@ -4182,6 +4206,68 @@ console.log('Première recette:', allRecipes[0]);
             `;
 
             content.innerHTML = html;
+        }
+
+        // Variables pour le drag & drop
+        let draggedItem = null;
+
+        function handleDragStart(event, recipeId, ingredientId) {
+            draggedItem = { recipeId, ingredientId };
+            event.currentTarget.classList.add('dragging');
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDrop(event, targetRecipeId, targetIngredientId) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+
+            if (!draggedItem) return;
+
+            // Ne rien faire si on dépose sur le même élément
+            if (draggedItem.recipeId === targetRecipeId && draggedItem.ingredientId === targetIngredientId) {
+                return;
+            }
+
+            // Collecter tous les ingrédients pour construire l'ordre
+            let allIngredients = [];
+            shoppingList.recipes.forEach(recipe => {
+                recipe.ingredients.forEach(ingredient => {
+                    allIngredients.push({
+                        recipeId: recipe.id,
+                        ingredientId: ingredient.id
+                    });
+                });
+            });
+
+            // Trouver les index source et cible
+            const sourceIndex = allIngredients.findIndex(
+                item => item.recipeId === draggedItem.recipeId && item.ingredientId === draggedItem.ingredientId
+            );
+            const targetIndex = allIngredients.findIndex(
+                item => item.recipeId === targetRecipeId && item.ingredientId === targetIngredientId
+            );
+
+            if (sourceIndex !== -1 && targetIndex !== -1) {
+                // Retirer l'élément source
+                const [movedItem] = allIngredients.splice(sourceIndex, 1);
+                // L'insérer à la position cible
+                allIngredients.splice(targetIndex, 0, movedItem);
+
+                // Sauvegarder le nouvel ordre
+                shoppingList.flatOrder = allIngredients;
+                saveShoppingListToStorage();
+                renderShoppingList();
+            }
+        }
+
+        function handleDragEnd(event) {
+            event.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            draggedItem = null;
         }
 
         // Charger la liste au démarrage
