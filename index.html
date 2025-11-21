@@ -1479,6 +1479,86 @@
             }
         }
 
+        /* Section d'ajout d'articles personnels */
+        .shopping-add-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px auto 40px;
+            max-width: 1200px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .shopping-add-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #FF6B6B;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .shopping-add-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .shopping-add-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .shopping-add-input:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .shopping-add-btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            white-space: nowrap;
+        }
+
+        .shopping-add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .shopping-add-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .shopping-add-section {
+                padding: 20px;
+            }
+
+            .shopping-add-form {
+                flex-direction: column;
+            }
+
+            .shopping-add-input {
+                width: 100%;
+            }
+
+            .shopping-add-btn {
+                width: 100%;
+            }
+        }
+
         /* Modal d'import CSV */
         .import-modal {
             display: none;
@@ -3684,6 +3764,73 @@ console.log('Première recette:', allRecipes[0]);
             }
         }
 
+        function getOrCreateCustomRecipe() {
+            let customRecipe = shoppingList.recipes.find(r => r.id === 'custom-items');
+            
+            if (!customRecipe) {
+                customRecipe = {
+                    id: 'custom-items',
+                    name: 'Autres achats',
+                    isCustom: true,
+                    portions: 0,
+                    adjustedPortions: 0,
+                    ingredients: []
+                };
+                shoppingList.recipes.push(customRecipe);
+            }
+            
+            return customRecipe;
+        }
+
+        function addCustomIngredient() {
+            const input = document.getElementById('customIngredientInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // Obtenir ou créer la recette "Autres achats"
+            const customRecipe = getOrCreateCustomRecipe();
+            
+            // Ajouter l'ingrédient
+            const newIngredient = {
+                id: `custom-ing-${Date.now()}`,
+                text: text,
+                originalText: text,
+                checked: false,
+                category: detectIngredientCategory(text)
+            };
+            
+            customRecipe.ingredients.push(newIngredient);
+            
+            // Sauvegarder et rafraîchir
+            saveShoppingListToStorage();
+            updateShoppingListBadge();
+            renderShoppingList();
+            
+            // Vider l'input et remettre le focus
+            input.value = '';
+            input.focus();
+        }
+
+        function clearCheckedCustomItems() {
+            const customRecipe = shoppingList.recipes.find(r => r.id === 'custom-items');
+            
+            if (!customRecipe) return;
+            
+            // Garder uniquement les ingrédients non cochés
+            customRecipe.ingredients = customRecipe.ingredients.filter(ing => !ing.checked);
+            
+            // Si la recette est vide, la supprimer
+            if (customRecipe.ingredients.length === 0) {
+                shoppingList.recipes = shoppingList.recipes.filter(r => r.id !== 'custom-items');
+            }
+            
+            // Sauvegarder et rafraîchir
+            saveShoppingListToStorage();
+            updateShoppingListBadge();
+            renderShoppingList();
+        }
+
         function renderShoppingList() {
             const content = document.getElementById('shoppingContent');
 
@@ -3736,16 +3883,22 @@ console.log('Première recette:', allRecipes[0]);
                 `;
 
                 toBuy.forEach(({ recipe, ingredients }) => {
+                    const deleteButton = recipe.isCustom 
+                        ? `<button class="shopping-recipe-delete" onclick="clearCheckedCustomItems()">🗑️ Vider cochés</button>`
+                        : `<button class="shopping-recipe-delete" onclick="removeRecipeFromShoppingList('${recipe.id}')">🗑️ Supprimer</button>`;
+                    
+                    const portionInfo = recipe.isCustom 
+                        ? '' 
+                        : `<div class="shopping-recipe-portions">${recipe.adjustedPortions || recipe.portions} personne(s)</div>`;
+                    
                     html += `
                         <div class="shopping-recipe-group">
                             <div class="shopping-recipe-header">
                                 <div>
                                     <div class="shopping-recipe-name">${recipe.name}</div>
-                                    <div class="shopping-recipe-portions">${recipe.adjustedPortions || recipe.portions} personne(s)</div>
+                                    ${portionInfo}
                                 </div>
-                                <button class="shopping-recipe-delete" onclick="removeRecipeFromShoppingList('${recipe.id}')">
-                                    🗑️ Supprimer
-                                </button>
+                                ${deleteButton}
                             </div>
                     `;
 
@@ -3808,6 +3961,25 @@ console.log('Première recette:', allRecipes[0]);
                     <button class="shopping-clear-btn" onclick="clearShoppingList()">
                         🗑️ Vider la liste
                     </button>
+                </div>
+            `;
+
+            // Section d'ajout d'articles personnels
+            html += `
+                <div class="shopping-add-section">
+                    <div class="shopping-add-title">
+                        ➕ Ajouter un article
+                    </div>
+                    <div class="shopping-add-form">
+                        <input type="text" 
+                               id="customIngredientInput" 
+                               class="shopping-add-input"
+                               placeholder="Ex: Pain, savon, dentifrice..." 
+                               onkeypress="if(event.key==='Enter') addCustomIngredient()">
+                        <button class="shopping-add-btn" onclick="addCustomIngredient()">
+                            Ajouter
+                        </button>
+                    </div>
                 </div>
             `;
 
@@ -3943,6 +4115,25 @@ console.log('Première recette:', allRecipes[0]);
                     <button class="shopping-clear-btn" onclick="clearShoppingList()">
                         🗑️ Vider la liste
                     </button>
+                </div>
+            `;
+
+            // Section d'ajout d'articles personnels
+            html += `
+                <div class="shopping-add-section">
+                    <div class="shopping-add-title">
+                        ➕ Ajouter un article
+                    </div>
+                    <div class="shopping-add-form">
+                        <input type="text" 
+                               id="customIngredientInput" 
+                               class="shopping-add-input"
+                               placeholder="Ex: Pain, savon, dentifrice..." 
+                               onkeypress="if(event.key==='Enter') addCustomIngredient()">
+                        <button class="shopping-add-btn" onclick="addCustomIngredient()">
+                            Ajouter
+                        </button>
+                    </div>
                 </div>
             `;
 
