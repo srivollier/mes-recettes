@@ -2355,6 +2355,9 @@ console.log('Première recette:', allRecipes[0]);
                 updateStats();
                 createCategoryFilters();
                 displayRecipes(allRecipes);
+                
+                // Charger la liste de courses après le chargement des recettes
+                loadShoppingListFromStorage();
 
             } catch (err) {
                 loading.style.display = 'none';
@@ -3627,7 +3630,8 @@ console.log('Première recette:', allRecipes[0]);
 
         async function saveShoppingListToStorage() {
             try {
-                const response = await fetch(webAppUrl, {
+                // Utiliser no-cors comme pour importRecipe (Google Apps Script a des limitations CORS)
+                await fetch(webAppUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -3641,28 +3645,19 @@ console.log('Première recette:', allRecipes[0]);
                 
                 // Avec mode no-cors, on ne peut pas lire la réponse
                 // On considère que c'est un succès si pas d'erreur
-                console.log('Liste de courses sauvegardée dans Excel');
             } catch (e) {
                 console.error('Erreur lors de la sauvegarde de la liste de courses:', e);
-                alert('Erreur lors de la sauvegarde de la liste de courses. Vérifiez votre connexion et que votre Web App est bien configurée.');
+                alert('Erreur lors de la sauvegarde de la liste de courses. Vérifiez votre connexion et que votre Web App est bien configurée.\n\nDétails: ' + e.message);
             }
         }
 
         async function loadShoppingListFromStorage() {
             try {
-                const response = await fetch(webAppUrl, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'loadShoppingList'
-                    })
-                });
+                // Utiliser GET avec un paramètre pour éviter les problèmes CORS
+                const response = await fetch(webAppUrl + '?action=loadShoppingList');
                 
                 if (!response.ok) {
-                    throw new Error('Erreur lors du chargement de la liste de courses');
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
@@ -3674,7 +3669,13 @@ console.log('Première recette:', allRecipes[0]);
                         shoppingList.flatOrder = [];
                     }
                     updateShoppingListBadge();
-                    console.log('Liste de courses chargée depuis Excel');
+                } else if (data.shoppingList) {
+                    // Si pas de success mais shoppingList existe
+                    shoppingList = data.shoppingList;
+                    if (!shoppingList.flatOrder) {
+                        shoppingList.flatOrder = [];
+                    }
+                    updateShoppingListBadge();
                 } else {
                     // Si pas de données, initialiser une liste vide
                     shoppingList = { recipes: [], flatOrder: [] };
@@ -4441,9 +4442,6 @@ console.log('Première recette:', allRecipes[0]);
             shoppingList.flatOrder = newOrder;
             saveShoppingListToStorage();
         }
-
-        // Charger la liste au démarrage
-        loadShoppingListFromStorage();
     </script>
 </body>
 </html>
