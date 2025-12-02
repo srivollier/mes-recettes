@@ -3625,24 +3625,70 @@ console.log('Première recette:', allRecipes[0]);
         // FONCTIONS LISTE DE COURSES - STOCKAGE
         // ============================================
 
-        function saveShoppingListToStorage() {
+        async function saveShoppingListToStorage() {
             try {
-                localStorage.setItem('mes-recettes-shopping-list', JSON.stringify(shoppingList));
+                const response = await fetch(webAppUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveShoppingList',
+                        shoppingList: shoppingList
+                    })
+                });
+                
+                // Avec mode no-cors, on ne peut pas lire la réponse
+                // On considère que c'est un succès si pas d'erreur
+                console.log('Liste de courses sauvegardée dans Excel');
             } catch (e) {
                 console.error('Erreur lors de la sauvegarde de la liste de courses:', e);
+                alert('Erreur lors de la sauvegarde de la liste de courses. Vérifiez votre connexion et que votre Web App est bien configurée.');
             }
         }
 
-        function loadShoppingListFromStorage() {
+        async function loadShoppingListFromStorage() {
             try {
-                const stored = localStorage.getItem('mes-recettes-shopping-list');
-                if (stored) {
-                    shoppingList = JSON.parse(stored);
+                const response = await fetch(webAppUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'loadShoppingList'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement de la liste de courses');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.shoppingList) {
+                    shoppingList = data.shoppingList;
+                    // S'assurer que flatOrder existe
+                    if (!shoppingList.flatOrder) {
+                        shoppingList.flatOrder = [];
+                    }
                     updateShoppingListBadge();
+                    console.log('Liste de courses chargée depuis Excel');
+                } else {
+                    // Si pas de données, initialiser une liste vide
+                    shoppingList = { recipes: [], flatOrder: [] };
+                    updateShoppingListBadge();
+                }
+                
+                if (data.warning) {
+                    console.warn('Avertissement:', data.warning);
                 }
             } catch (e) {
                 console.error('Erreur lors du chargement de la liste de courses:', e);
-                shoppingList = { recipes: [] };
+                // En cas d'erreur, initialiser une liste vide
+                shoppingList = { recipes: [], flatOrder: [] };
+                updateShoppingListBadge();
             }
         }
 
