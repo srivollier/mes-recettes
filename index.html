@@ -1354,6 +1354,25 @@
             color: #FF6B6B;
         }
 
+        .clickable-recipe-name {
+            cursor: pointer;
+            color: #667eea;
+            transition: color 0.2s ease;
+        }
+
+        .clickable-recipe-name:hover {
+            color: #5568d3;
+            text-decoration: underline;
+        }
+
+        .clickable-recipe-tag {
+            transition: color 0.2s ease;
+        }
+
+        .clickable-recipe-tag:hover {
+            color: #5568d3 !important;
+        }
+
         .shopping-recipe-portions {
             font-size: 0.9em;
             color: #999;
@@ -3758,6 +3777,24 @@ console.log('Première recette:', allRecipes[0]);
             renderShoppingList();
         }
 
+        function openRecipeFromShoppingList(recipeName) {
+            // Ne pas ouvrir pour les recettes personnalisées
+            if (recipeName === 'Autres achats') {
+                return;
+            }
+            
+            // Chercher la recette dans allRecipes par son nom
+            const recipe = allRecipes.find(r => r.nom === recipeName);
+            
+            if (recipe) {
+                // Fermer la liste de courses et ouvrir la modal de la recette
+                closeShoppingList();
+                openRecipeModal(recipe);
+            } else {
+                console.warn('Recette non trouvée:', recipeName);
+            }
+        }
+
         function addRecipeToShoppingListFromModal() {
             const recipe = currentRecipeForStepMode;
             if (!recipe) return;
@@ -4063,11 +4100,16 @@ console.log('Première recette:', allRecipes[0]);
                         ? '' 
                         : `<div class="shopping-recipe-portions">${recipe.adjustedPortions || recipe.portions} personne(s)</div>`;
                     
+                    // Rendre le nom cliquable si ce n'est pas une recette personnalisée
+                    const recipeNameHtml = recipe.isCustom
+                        ? `<div class="shopping-recipe-name">${recipe.name}</div>`
+                        : `<div class="shopping-recipe-name clickable-recipe-name" onclick="openRecipeFromShoppingList('${recipe.name}')" title="Cliquer pour voir la recette">${recipe.name}</div>`;
+                    
                     html += `
                         <div class="shopping-recipe-group">
                             <div class="shopping-recipe-header">
                                 <div>
-                                    <div class="shopping-recipe-name">${recipe.name}</div>
+                                    ${recipeNameHtml}
                                     ${portionInfo}
                                 </div>
                                 ${deleteButton}
@@ -4129,11 +4171,16 @@ console.log('Première recette:', allRecipes[0]);
                 `;
 
                 owned.forEach(({ recipe, ingredients }) => {
+                    // Rendre le nom cliquable si ce n'est pas une recette personnalisée
+                    const recipeNameHtml = recipe.isCustom
+                        ? `<div class="shopping-recipe-name">${recipe.name}</div>`
+                        : `<div class="shopping-recipe-name clickable-recipe-name" onclick="openRecipeFromShoppingList('${recipe.name}')" title="Cliquer pour voir la recette">${recipe.name}</div>`;
+                    
                     html += `
                         <div class="shopping-recipe-group">
                             <div class="shopping-recipe-header">
                                 <div>
-                                    <div class="shopping-recipe-name">${recipe.name}</div>
+                                    ${recipeNameHtml}
                                 </div>
                             </div>
                     `;
@@ -4214,7 +4261,10 @@ console.log('Première recette:', allRecipes[0]);
                 `;
 
                 toBuy.forEach(item => {
-                    const recipeTag = item.isCustom ? '' : ` <span style="color: #999; font-size: 0.9em;">(${item.recipeName})</span>`;
+                    // Rendre le tag de recette cliquable si ce n'est pas une recette personnalisée
+                    const recipeTag = item.isCustom 
+                        ? '' 
+                        : ` <span class="clickable-recipe-tag" onclick="event.stopPropagation(); openRecipeFromShoppingList('${item.recipeName}')" title="Cliquer pour voir la recette" style="color: #667eea; font-size: 0.9em; cursor: pointer; text-decoration: underline;">(${item.recipeName})</span>`;
                     html += `
                         <div class="shopping-ingredient" 
                              data-recipe-id="${item.recipeId}"
@@ -4261,7 +4311,10 @@ console.log('Première recette:', allRecipes[0]);
                 `;
 
                 owned.forEach(item => {
-                    const recipeTag = item.isCustom ? '' : ` <span style="color: #999; font-size: 0.9em;">(${item.recipeName})</span>`;
+                    // Rendre le tag de recette cliquable si ce n'est pas une recette personnalisée
+                    const recipeTag = item.isCustom 
+                        ? '' 
+                        : ` <span class="clickable-recipe-tag" onclick="event.stopPropagation(); openRecipeFromShoppingList('${item.recipeName}')" title="Cliquer pour voir la recette" style="color: #667eea; font-size: 0.9em; cursor: pointer; text-decoration: underline;">(${item.recipeName})</span>`;
                     html += `
                         <div class="shopping-ingredient checked">
                             <input type="checkbox" class="shopping-ingredient-checkbox" checked
